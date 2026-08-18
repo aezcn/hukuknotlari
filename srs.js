@@ -4,6 +4,8 @@
 
   var MIN_EASE = 1.3;
   var MAX_INTERVAL = 365 * 2;
+  var LEECH_AT = 8;      /* bu kadar unutmadan sonra kart "takilan" sayilir */
+  var LEECH_AGAIN = 4;   /* uyari tekrarlanmadan once gereken ek unutma */
 
   function today() { return root.HN_DB.localDateString(new Date()); }
 
@@ -77,6 +79,25 @@
     return (Math.round(d / 36.5) / 10) + ' yıl';
   }
 
+  /* Cok unutulan kart genelde kotu yazilmis karttir. Bunlari isaretliyoruz. */
+  function isLeech(note) {
+    var s = note && note.srs;
+    return !!(s && (s.lapses || 0) >= LEECH_AT);
+  }
+
+  /* Her unutmada uyarmayalim: esikte bir kez, sonra dorder unutmada bir. */
+  function shouldWarnLeech(srs) {
+    var l = (srs && srs.lapses) || 0;
+    if (l < LEECH_AT) return false;
+    var last = srs.leechWarn || 0;
+    if (!last) return true;
+    return (l - last) >= LEECH_AGAIN;
+  }
+
+  function markLeechWarned(srs) {
+    if (srs) srs.leechWarn = srs.lapses || 0;
+  }
+
   function isDue(note, dateStr) {
     if (note.suspended) return false;
     if (note.type === 'not') return false;
@@ -85,6 +106,8 @@
 
   root.HN_SRS = {
     fresh: fresh, review: review, preview: preview, isDue: isDue,
-    today: today, addDays: addDays, daysBetween: daysBetween
+    today: today, addDays: addDays, daysBetween: daysBetween,
+    isLeech: isLeech, shouldWarnLeech: shouldWarnLeech,
+    markLeechWarned: markLeechWarned, LEECH_AT: LEECH_AT
   };
 })(self);

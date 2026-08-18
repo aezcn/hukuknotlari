@@ -223,6 +223,12 @@
       return;
     }
 
+    if (s.leech) {
+      var lnote = byId(s.leech);
+      if (lnote) return renderLeech(lnote);
+      s.leech = null;
+    }
+
     var note = byId(s.queue[0]);
     if (!note) { s.queue.shift(); return renderStudy(); }
 
@@ -241,6 +247,7 @@
           '<span class="pill accent">' + esc(note.ders || 'Genel') + '</span>' +
           (note.konu ? '<span class="pill">' + esc(note.konu) + '</span>' : '') +
           '<span class="pill">' + esc(TYPE_LABEL[note.type] || note.type) + '</span>' +
+          (SRS.isLeech(note) ? '<span class="pill gold">takılan</span>' : '') +
         '</div>' +
         '<div class="study-front">' + esc(note.front) + '</div>';
 
@@ -327,9 +334,69 @@
       var pos = Math.min(s.queue.length, 4);
       s.queue.splice(pos, 0, note.id);
     }
+    if (rating === 'tekrar' && SRS.shouldWarnLeech(note.srs)) {
+      SRS.markLeechWarned(note.srs);
+      s.leech = note.id;
+    }
     logReview();
     DB.put(note).then(function () { updateBadge(); });
     renderStudy();
+  }
+
+  /* Kart takildiginda araya giren ekran. Anki gibi sessizce bekletmiyoruz;
+     karari kullaniciya birakmak, kartin neden takildigini dusunmesini sagliyor. */
+  function renderLeech(note) {
+    var wrap = $('#studyWrap');
+    var s0 = state.session;
+    $('#viewSub').textContent = s0 ? (s0.done + ' / ' + (s0.done + s0.queue.length)) : '';
+    wrap.innerHTML =
+      '<div class="notice warn"><b>Bu kart seni takıyor</b>' +
+        'Bu kartı ' + (note.srs.lapses || 0) + ' kez unuttun. Genelde bu, kartın tek ' +
+        'seferde çok şey sorduğunu ya da ifadesinin bulanık olduğunu gösterir — ' +
+        'senin çalışmadığını değil.</div>' +
+      '<div class="study-card">' +
+        '<div class="study-meta">' +
+          '<span class="pill accent">' + esc(note.ders || 'Genel') + '</span>' +
+          (note.konu ? '<span class="pill">' + esc(note.konu) + '</span>' : '') +
+          '<span class="pill gold">takılan</span>' +
+        '</div>' +
+        '<div class="study-front">' + esc(note.front) + '</div>' +
+        (note.back ? '<div class="study-back">' + esc(note.back) + '</div>' : '') +
+      '</div>' +
+      '<div class="spacer"></div>' +
+      '<button class="primary wide" id="leechEdit">Notu düzelt — böl ya da sadeleştir</button>' +
+      '<div class="spacer"></div>' +
+      '<div class="row">' +
+        '<button id="leechSuspend">Beklet</button>' +
+        '<button class="ghost" id="leechSkip">Şimdilik devam</button>' +
+      '</div>';
+
+    $('#leechEdit').addEventListener('click', function () {
+      clearLeech();
+      openEditor(note);
+    });
+    $('#leechSuspend').addEventListener('click', function () {
+      note.suspended = true;
+      note.updated = Date.now();
+      var s = state.session;
+      if (s) {
+        s.queue = s.queue.filter(function (id) { return id !== note.id; });
+        s.leech = null;
+      }
+      DB.put(note).then(function () {
+        updateBadge();
+        toast('Bekletiliyor — Notlar’dan geri alabilirsin');
+        renderStudy();
+      });
+    });
+    $('#leechSkip').addEventListener('click', function () {
+      clearLeech();
+      renderStudy();
+    });
+  }
+
+  function clearLeech() {
+    if (state.session) state.session.leech = null;
   }
 
   /* Cevaptan ONCE oturumun ve kartin halini sakla; "Geri al" bunu geri yukler. */
@@ -420,7 +487,7 @@
   // =========================================================================
   var SCOPE_LABEL = {
     hepsi: 'hepsi', zor: 'zorlandıklarım', yeni: 'hiç çalışmadıklarım',
-    gecikmis: 'bugün bekleyenler', yaklasan: 'yaklaşanlar'
+    gecikmis: 'bugün bekleyenler', yaklasan: 'yaklaşanlar', takilan: 'takılanlar'
   };
 
   function drillCard() {
@@ -503,6 +570,7 @@
 
       var srs = n.srs || {};
       if (scope === 'zor') return (srs.lapses || 0) > 0 || (srs.ease || 2.5) < 2.35;
+      if (scope === 'takilan') return SRS.isLeech(n);
       if (scope === 'yeni') return srs.state === 'yeni';
       if (scope === 'gecikmis') return n.type !== 'not' && srs.due <= t;
       if (scope === 'yaklasan') {
@@ -693,6 +761,7 @@
           '<span class="pill">' + esc(when) + '</span>' +
           (n.suspended ? '<span class="pill">bekletiliyor</span>' : '') +
           (n.quick ? '<span class="pill gold">işlenmemiş</span>' : '') +
+          (SRS.isLeech(n) ? '<span class="pill gold">takılan</span>' : '') +
         '</div>' +
         '<div class="note-act"><button class="ghost small" data-edit="' + n.id + '">Düzenle</button></div>' +
       '</div>';
@@ -1046,6 +1115,22 @@
 
       var totalReviews = Object.keys(log).reduce(function (a, k2) { return a + log[k2]; }, 0);
 
+      var leeches = cards.filter(function (n) {
+        return SRS.isLeech(n) && !n.suspended;
+      }).sort(function (a, b) { return (b.srs.lapses || 0) - (a.srs.lapses || 0); });
+
+      var leechHtml = leeches.length
+        ? '<div class="card"><b class="small">Takılan kartlar (' + leeches.length + ')</b>' +
+          '<div class="tiny muted" style="margin:4px 0 10px">' +
+          'Bunları ' + SRS.LEECH_AT + '+ kez unuttun. Sorun genelde kartın kendisindedir — ' +
+          'dokun, böl ya da sadeleştir.</div>' +
+          leeches.map(function (n) {
+            return '<div class="leech-row" data-id="' + esc(n.id) + '">' +
+              '<span class="name">' + esc(n.front) + '</span>' +
+              '<span class="num">' + (n.srs.lapses || 0) + ' kez</span></div>';
+          }).join('') + '</div>'
+        : '';
+
       $('#statWrap').innerHTML =
         '<div class="stat-grid">' +
           stat(total, 'toplam not') +
@@ -1055,6 +1140,7 @@
           stat(streak, 'günlük seri') +
           stat(totalReviews, 'toplam tekrar') +
         '</div>' +
+        leechHtml +
         '<div class="card"><b class="small">Son 14 gün — yapılan tekrar</b>' +
           bars(past) + '<div class="tiny muted center">' + past[0].d.slice(5) + ' → bugün</div></div>' +
         '<div class="card"><b class="small">Önümüzdeki 14 gün — gelecek yük</b>' +
@@ -1066,6 +1152,10 @@
               '<span class="track"><i style="width:' + pct + '%"></i></span>' +
               '<span class="num">' + d.total + ' · %' + pct + '</span></div>';
           }).join('') + '</div>' : '');
+
+      $$('#statWrap .leech-row').forEach(function (el) {
+        el.addEventListener('click', function () { openEditor(byId(el.dataset.id)); });
+      });
     });
   }
 

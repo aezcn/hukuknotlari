@@ -274,6 +274,25 @@ nav.tabs .badge {
 .ders-row .track > i { display: block; height: 100%; background: var(--gold); }
 .ders-row .num { font-size: 12px; color: var(--muted); width: 54px; text-align: right; }
 
+.leech-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.leech-row:last-child { border-bottom: 0; }
+.leech-row .name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leech-row .num { font-size: 12px; color: var(--warn); white-space: nowrap; }
+
 /* calisma ekraninin alt satiri: uc dugme tek satirda kalsin */
 .study-foot button {
   padding-left: 6px;

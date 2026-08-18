@@ -171,7 +171,8 @@ yapıştırarak deneyebilirsin.
   düzelir. Geri alma yalnızca o oturum içinde geçerlidir.
 - **Notlar**: arama ve filtreleme. Bir nota dokun → açılır, içindeki **Düzenle**
   düğmesiyle değiştirirsin.
-- **İstatistik**: seri, geçmiş çalışma, önümüzdeki günlerin yükü, ders bazlı ilerleme.
+- **İstatistik**: seri, geçmiş çalışma, önümüzdeki günlerin yükü, ders bazlı ilerleme,
+  takılan kartlar.
 - Bir konuyu bir süre görmek istemiyorsan notu düzenleyip **Beklet** de.
 
 ### Serbest çalışma
@@ -188,7 +189,7 @@ Seçenekler:
 |---|---|
 | Tür | Sadece Süre, Madde, Karıştırılanlar… ya da tüm kartlar |
 | Ders | Tek derse odaklan |
-| Kapsam | Hepsi · Zorlandıklarım · Hiç çalışmadıklarım · Bugün bekleyenler · Yaklaşanlar (7 gün) |
+| Kapsam | Hepsi · Zorlandıklarım · Takılanlar · Hiç çalışmadıklarım · Bugün bekleyenler · Yaklaşanlar (7 gün) |
 | Kaç kart | 10 / 20 / 30 / 50 / hepsi |
 | Sıra | Karışık · En eski · Zordan kolaya |
 
@@ -203,6 +204,30 @@ kalır. Bu turun gerçek tekrar sayılmasını istersen diyalogdaki
 
 Zorlandıklarım kapsamı, daha önce “Tekrar” dediğin (lapses > 0) ya da kolaylık
 katsayısı düşmüş kartları toplar — sınav öncesi en verimli tur genelde budur.
+
+---
+
+## Takılan kartlar
+
+Bir kartı **8 kez** unuttuysan uygulama araya girip söylüyor. Bu eşik bilinçli
+olarak yüksek: birkaç kez unutmak normaldir, sekiz kez unutmak ise genelde
+kartın kendisiyle ilgilidir — tek soruda çok şey soruyordur ya da ifadesi
+bulanıktır.
+
+Uyarı çıkınca üç seçenek var:
+
+| Seçenek | Ne olur |
+|---|---|
+| **Notu düzelt** | Düzenleyici açılır; kartı bölmek ya da sadeleştirmek en kalıcı çözüm. İçerideki *Tekrarı sıfırla* takılma sayacını da sıfırlar |
+| **Beklet** | Kart tekrardan çıkar, oturumdan da düşer. Notlar’dan geri alınabilir |
+| **Şimdilik devam** | Hiçbir şey değişmez, çalışmaya devam |
+
+Uyarı her unutmada tekrarlanmaz; eşikte bir kez, sonra her dört unutmada bir çıkar.
+
+Takılan kartlar ayrıca **İstatistik** ekranında kaç kez unutulduklarıyla birlikte
+listelenir (dokununca düzenleyici açılır), Notlar ve çalışma ekranında
+*takılan* etiketi taşır, ve serbest çalışmada **Takılanlar** kapsamıyla topluca
+çalışılabilir. Sınavdan önce elden geçirilecek ilk yığın budur.
 
 ---
 
