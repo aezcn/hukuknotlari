@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAPID Anahtarı Üret</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+         max-width: 720px; margin: 0 auto; padding: 24px 18px 60px; }
+  h1 { font-size: 20px; }
+  button { font: inherit; font-weight: 600; padding: 12px 18px; border-radius: 10px;
+           border: 1px solid #8884; cursor: pointer; }
+  .out { margin-top: 18px; display: none; }
+  label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase;
+          letter-spacing: .04em; opacity: .6; margin: 16px 0 5px; }
+  textarea { width: 100%; font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+             padding: 10px; border-radius: 9px; border: 1px solid #8884; background: #8881;
+             color: inherit; resize: vertical; }
+  .warn { border-left: 3px solid #e0a35e; padding: 8px 12px; background: #e0a35e18;
+          border-radius: 0 8px 8px 0; margin-top: 20px; font-size: 14px; }
+  code { background: #8882; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<h1>VAPID anahtar çifti üret</h1>
+<p>Bu sayfa anahtarları <b>tarayıcında</b> üretir; hiçbir yere gönderilmez.
+Bir kez üret, iki değeri de sakla, sayfayı kapat.</p>
+
+<button id="gen">Anahtar üret</button>
+
+<div class="out" id="out">
+  <label>1 · Açık anahtar (VAPID_PUBLIC_KEY)</label>
+  <div style="font-size:13px;opacity:.75;margin-bottom:6px">
+    Hem <code>config.js</code> içine hem Worker değişkenlerine yazılır.
+  </div>
+  <textarea id="pub" rows="2" readonly></textarea>
+
+  <label>2 · Gizli anahtar (VAPID_PRIVATE_JWK)</label>
+  <div style="font-size:13px;opacity:.75;margin-bottom:6px">
+    Sadece Cloudflare Worker’a <b>Secret</b> olarak eklenir. Repoya koyma.
+  </div>
+  <textarea id="priv" rows="9" readonly></textarea>
+
+  <div class="warn">
+    <b>Kaybetme.</b> Gizli anahtarı değiştirirsen mevcut tüm abonelikler geçersiz olur,
+    telefondan bildirimleri kapatıp yeniden açman gerekir.
+  </div>
+</div>
+
+<script>
+document.getElementById('gen').addEventListener('click', async function () {
+  const pair = await crypto.subtle.generateKey(
+    { name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']
+  );
+  const rawPub = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey));
+  const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
+  delete jwk.key_ops;
+  delete jwk.ext;
+
+  document.getElementById('pub').value = b64url(rawPub);
+  document.getElementById('priv').value = JSON.stringify(jwk);
+  document.getElementById('out').style.display = 'block';
+});
+
+function b64url(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+</script>
+</body>
+</html>

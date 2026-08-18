@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Hukuk Notları</title>
+<meta name="description" content="HMGS hazırlık için not ve tekrar uygulaması">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hukuk Notları">
+<meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="top">
+  <h1 id="viewTitle">Bugün</h1>
+  <div class="sub" id="viewSub"></div>
+</header>
+
+<main>
+
+  <!-- ============ BUGÜN ============ -->
+  <section class="view active" id="view-bugun">
+    <div id="studyWrap"></div>
+  </section>
+
+  <!-- ============ NOTLAR ============ -->
+  <section class="view" id="view-notlar">
+    <input type="search" id="q" placeholder="Ara: kavram, madde, etiket…" autocomplete="off" autocorrect="off">
+    <div class="spacer"></div>
+    <div class="row">
+      <select id="fDers"><option value="">Tüm dersler</option></select>
+      <select id="fTip">
+        <option value="">Tüm türler</option>
+        <option value="kart">Kart</option>
+        <option value="not">Not</option>
+        <option value="madde">Madde</option>
+        <option value="sure">Süre</option>
+        <option value="karsilastirma">Karşılaştırma</option>
+      </select>
+    </div>
+    <div class="spacer"></div>
+    <button id="listDrill" class="wide hidden">Bu filtreyle çalış</button>
+    <div class="spacer"></div>
+    <div class="tiny muted" id="listCount"></div>
+    <div class="spacer"></div>
+    <div id="list"></div>
+  </section>
+
+  <!-- ============ EKLE ============ -->
+  <section class="view" id="view-ekle">
+    <div class="row" style="margin-bottom:12px">
+      <button id="modeSingle" class="primary">Tek not</button>
+      <button id="modeBulk" class="ghost">Toplu yapıştır</button>
+    </div>
+
+    <div id="paneSingle">
+      <div class="card">
+        <label class="field"><span>Tür</span>
+          <select id="sType">
+            <option value="kart">Kart (soru → cevap)</option>
+            <option value="madde">Madde (kanun maddesi)</option>
+            <option value="sure">Süre / mühlet</option>
+            <option value="karsilastirma">Karıştırılanlar</option>
+            <option value="not">Serbest not (tekrara girmez)</option>
+          </select>
+        </label>
+        <div class="row">
+          <label class="field"><span>Ders</span>
+            <input type="text" id="sDers" list="dersList" placeholder="Medeni Hukuk" autocapitalize="words">
+          </label>
+          <label class="field"><span>Konu</span>
+            <input type="text" id="sKonu" placeholder="Eşya" autocapitalize="words">
+          </label>
+        </div>
+        <label class="field"><span id="lblFront">Soru / ön yüz</span>
+          <textarea id="sFront" style="min-height:90px" placeholder="Tapu sicilinin tutulmasından doğan zarardan kim sorumludur?"></textarea>
+        </label>
+        <label class="field"><span id="lblBack">Cevap / arka yüz</span>
+          <textarea id="sBack" style="min-height:120px" placeholder="Devlet. Kusursuz sorumluluk hâlidir."></textarea>
+        </label>
+        <div class="row">
+          <label class="field"><span>Kaynak</span>
+            <input type="text" id="sKaynak" placeholder="TMK m.1007">
+          </label>
+          <label class="field"><span>Etiketler (boşlukla)</span>
+            <input type="text" id="sTags" placeholder="eşya tapu" autocapitalize="none">
+          </label>
+        </div>
+        <button class="primary wide" id="saveSingle">Kaydet</button>
+      </div>
+    </div>
+
+    <div id="paneBulk" class="hidden">
+      <div class="card">
+        <div class="row">
+          <label class="field"><span>Varsayılan ders</span>
+            <input type="text" id="bDers" list="dersList" placeholder="Medeni Hukuk" autocapitalize="words">
+          </label>
+          <label class="field"><span>Varsayılan konu</span>
+            <input type="text" id="bKonu" placeholder="Eşya" autocapitalize="words">
+          </label>
+        </div>
+        <label class="field"><span>Yapıştır</span>
+          <textarea id="bText" placeholder="@Medeni Hukuk/Eşya
+S: Tapu sicilinin tutulmasından doğan zarardan kim sorumludur?
+C: Devlet — kusursuz sorumluluk
+K: TMK m.1007
+#eşya #tapu
+
+S: Zilyetliğin devren kazanılması yolları?
+C: Teslim, kısa elden teslim, hükmen teslim, havale"></textarea>
+        </label>
+        <details class="help">
+          <summary>Yazım biçimi nasıl?</summary>
+          <pre>@Ders/Konu        sonraki bloklar bu derse yazılır
+S: soru           ön yüz   (Soru: / Q: de olur)
+C: cevap          arka yüz (Cevap: / A: de olur)
+K: TMK m.1007     kaynak
+T: sure           tür (kart, madde, sure, karsilastirma, not)
+#etiket #etiket2  etiketler
+                  boş satır = yeni not
+
+Kısayol tek satır:
+Zamanaşımı süresi :: 10 yıl
+
+İşaretsiz blok = serbest not
+(ilk satır başlık, gerisi gövde)</pre>
+        </details>
+        <div class="row">
+          <button id="bPreview">Önizle</button>
+          <button class="primary" id="bImport" disabled>İçe aktar</button>
+        </div>
+        <div id="bResult"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ İSTATİSTİK ============ -->
+  <section class="view" id="view-istatistik">
+    <div id="statWrap"></div>
+  </section>
+
+  <!-- ============ AYARLAR ============ -->
+  <section class="view" id="view-ayarlar">
+    <div class="card">
+      <b>Bildirimler</b>
+      <div id="pushStatus"></div>
+    </div>
+
+    <div class="card">
+      <b>Günlük hedef</b>
+      <div class="tiny muted" style="margin:4px 0 8px">Bir oturumda en fazla kaç kart gösterilsin?</div>
+      <input type="text" id="dailyLimit" inputmode="numeric" placeholder="60">
+      <div class="spacer"></div>
+      <button id="saveLimit">Kaydet</button>
+    </div>
+
+    <div class="card">
+      <b>Yedekleme</b>
+      <div class="tiny muted" style="margin:4px 0 10px">
+        Notlar sadece bu cihazda tutuluyor. Ara sıra dışa aktarıp yedek al.
+      </div>
+      <div class="row">
+        <button id="exportBtn">Dışa aktar</button>
+        <button id="importBtn">İçe aktar</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+    </div>
+
+    <div class="card">
+      <b>Tehlikeli bölge</b>
+      <div class="spacer"></div>
+      <button class="danger wide" id="wipeBtn">Tüm notları sil</button>
+    </div>
+
+    <div class="tiny muted center" style="padding:8px 0 4px" id="buildInfo"></div>
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <button data-view="bugun" class="on"><span class="ic">📅</span>Bugün<span class="badge hidden" id="tabBadge">0</span></button>
+  <button data-view="notlar"><span class="ic">📚</span>Notlar</button>
+  <button data-view="ekle"><span class="ic">➕</span>Ekle</button>
+  <button data-view="istatistik"><span class="ic">📊</span>İstatistik</button>
+  <button data-view="ayarlar"><span class="ic">⚙️</span>Ayarlar</button>
+</nav>
+
+<datalist id="dersList"></datalist>
+<div id="toast"></div>
+
+<dialog id="drillDlg">
+  <div class="dlg-body">
+    <b>Serbest çalışma</b>
+    <div class="tiny muted" style="margin:4px 0 14px">
+      Günlük tekrardan bağımsız bir tur. İstediğin türü, dersi ve kart sayısını seç.
+    </div>
+    <span class="pill gold hidden" id="dQuery"></span>
+
+    <label class="field"><span>Tür</span>
+      <select id="dType">
+        <option value="">Tüm kartlar</option>
+        <option value="kart">Kart</option>
+        <option value="madde">Madde</option>
+        <option value="sure">Süre</option>
+        <option value="karsilastirma">Karıştırılanlar</option>
+        <option value="not">Serbest notlar</option>
+      </select>
+    </label>
+
+    <label class="field"><span>Ders</span>
+      <select id="dDers"><option value="">Tüm dersler</option></select>
+    </label>
+
+    <label class="field"><span>Kapsam</span>
+      <select id="dScope">
+        <option value="hepsi">Hepsi</option>
+        <option value="zor">Zorlandıklarım</option>
+        <option value="yeni">Hiç çalışmadıklarım</option>
+        <option value="gecikmis">Bugün bekleyenler</option>
+        <option value="yaklasan">Yaklaşanlar (7 gün)</option>
+      </select>
+    </label>
+
+    <label class="field"><span>Kaç kart?</span>
+      <div class="segmented" id="dCount">
+        <button data-v="10">10</button>
+        <button data-v="20" class="on">20</button>
+        <button data-v="30">30</button>
+        <button data-v="50">50</button>
+        <button data-v="0">Hepsi</button>
+      </div>
+    </label>
+
+    <label class="field"><span>Sıra</span>
+      <div class="segmented" id="dOrder">
+        <button data-v="karisik" class="on">Karışık</button>
+        <button data-v="eski">En eski</button>
+        <button data-v="zor">Zordan kolaya</button>
+      </div>
+    </label>
+
+    <label class="switch">
+      <input type="checkbox" id="dResched">
+      <span>Cevaplarım tekrar planımı güncellesin</span>
+    </label>
+    <div class="tiny muted" id="dReschedHint">
+      Bu çalışma günlük planını hiç değiştirmez — sadece pratik.
+    </div>
+
+    <div class="spacer"></div>
+    <div id="dCountInfo" class="notice"></div>
+  </div>
+  <div class="dlg-foot">
+    <button id="drillCancel" class="ghost">Vazgeç</button>
+    <button id="drillStart" class="primary">Başlat</button>
+  </div>
+</dialog>
+
+<dialog id="editDlg">
+  <div class="dlg-body">
+    <label class="field"><span>Tür</span>
+      <select id="eType">
+        <option value="kart">Kart</option>
+        <option value="madde">Madde</option>
+        <option value="sure">Süre</option>
+        <option value="karsilastirma">Karşılaştırma</option>
+        <option value="not">Serbest not</option>
+      </select>
+    </label>
+    <div class="row">
+      <label class="field"><span>Ders</span><input type="text" id="eDers" list="dersList"></label>
+      <label class="field"><span>Konu</span><input type="text" id="eKonu"></label>
+    </div>
+    <label class="field"><span>Ön yüz</span><textarea id="eFront" style="min-height:80px"></textarea></label>
+    <label class="field"><span>Arka yüz</span><textarea id="eBack" style="min-height:110px"></textarea></label>
+    <div class="row">
+      <label class="field"><span>Kaynak</span><input type="text" id="eKaynak"></label>
+      <label class="field"><span>Etiketler</span><input type="text" id="eTags"></label>
+    </div>
+    <div class="tiny muted" id="eInfo"></div>
+    <div class="spacer"></div>
+    <div class="row">
+      <button id="eReset" class="ghost">Tekrarı sıfırla</button>
+      <button id="eSuspend" class="ghost">Beklet</button>
+      <button id="eDelete" class="danger">Sil</button>
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <button id="eCancel" class="ghost">Vazgeç</button>
+    <button id="eSave" class="primary">Kaydet</button>
+  </div>
+</dialog>
+
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="srs.js"></script>
+<script src="parse.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

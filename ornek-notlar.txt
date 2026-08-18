@@ -1,0 +1,94 @@
+@Medeni Hukuk/Kişiler
+S: Tam ehliyetsizlerin hukuki işlemleri geçerli midir?
+C: Kural olarak kesin hükümsüzdür. İstisna: kişiye sıkı sıkıya bağlı haklar ve karşılıksız kazandırmalar.
+K: TMK m.15
+#ehliyet
+
+S: Gaiplik kararı için hangi süreler geçmelidir?
+C: Ölüm tehlikesi içinde kaybolmada 1 yıl, uzun süre haber alınamamada 5 yıl.
+K: TMK m.32-33
+#gaiplik
+
+@Medeni Hukuk/Eşya
+S: Tapu sicilinin tutulmasından doğan zarardan kim sorumludur?
+C: Devlet. Kusursuz sorumluluk hâlidir, kusur aranmaz.
+K: TMK m.1007
+#tapu #sorumluluk
+
+S: Zilyetliğin devren kazanılması yolları nelerdir?
+C: Teslim, kısa elden teslim, hükmen teslim (zilyetlik hükmü), havale
+K: TMK m.977 vd.
+#zilyetlik
+
+T: karsilastirma
+S: Aynî hak / Şahsi hak farkı
+C: Aynî hak: herkese karşı ileri sürülür (mutlak), sınırlı sayıda, sicile tescil edilir.
+Şahsi hak: yalnız borçluya karşı (nispi), sınırsız sayıda, kural olarak tescil edilmez.
+#karistirilanlar
+
+@Borçlar Hukuku/Genel
+T: sure
+S: Haksız fiilde zamanaşımı
+C: Zararı ve failini öğrenmeden itibaren 2 yıl, her hâlde fiilden itibaren 10 yıl.
+Fiil suç teşkil ediyorsa ceza zamanaşımı uygulanır.
+K: TBK m.72
+#zamanasimi
+
+T: sure
+S: Sebepsiz zenginleşmede zamanaşımı
+C: Öğrenmeden itibaren 2 yıl, her hâlde 10 yıl.
+K: TBK m.82
+#zamanasimi
+
+S: Müteselsil borçlulukta iç ilişkide rücu nasıl işler?
+C: Ödeyen borçlu, diğerlerine payları oranında rücu eder. Payı belirsizse eşit kabul edilir.
+K: TBK m.167
+
+@Ceza Hukuku/Genel Hükümler
+S: Taksirin unsurları nelerdir?
+C: Dikkat ve özen yükümlülüğüne aykırılık, neticenin öngörülebilir olması, neticenin istenmemesi.
+K: TCK m.22
+#taksir
+
+S: Bilinçli taksir ile olası kast arasındaki fark?
+C: Olası kastta fail neticeyi öngörür ve kabullenir; bilinçli taksirde öngörür ama istemez, olmayacağına güvenir.
+#karistirilanlar
+
+@Anayasa Hukuku
+S: Anayasa Mahkemesi’ne bireysel başvuru süresi?
+C: Olağan kanun yolları tükendikten sonra 30 gün.
+K: 6216 s.K. m.47/5
+#süre
+
+S: Kanun hükmünde kararname bugün mevcut mudur?
+C: Hayır. 2017 değişikliğiyle kaldırıldı; yerini Cumhurbaşkanlığı kararnamesi aldı.
+
+@İcra ve İflas Hukuku
+T: sure
+S: İlamsız icrada ödeme emrine itiraz süresi
+C: 7 gün
+K: İİK m.62
+#süre
+
+T: sure
+S: İtirazın kaldırılması talebi süresi
+C: İtirazın tebliğinden itibaren 6 ay
+K: İİK m.68
+#süre
+
+@Hukuk Muhakemeleri
+T: sure
+S: İstinaf başvuru süresi (HMK)
+C: Kararın tebliğinden itibaren 2 hafta
+K: HMK m.345
+#süre
+
+T: sure
+S: Temyiz süresi (HMK)
+C: Kararın tebliğinden itibaren 2 hafta
+K: HMK m.361
+#süre
+
+S: Görev kuralı kamu düzeninden midir?
+C: Evet. Mahkeme resen dikkate alır, taraflar sözleşmeyle değiştiremez.
+K: HMK m.1
