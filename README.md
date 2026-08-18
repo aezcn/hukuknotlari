@@ -240,6 +240,26 @@ verisi Safari’nin otomatik temizliğinden muaftır, ama yine de:
 Yeni cihazda **İçe aktar** ile geri yükle — aynı `id`’li notlar güncellenir,
 yenileri eklenir, mevcut ilerleme silinmez.
 
+### Hatırlatma
+
+Uygulama son yedeğin ne zaman alındığını tutuyor ve gerektiğinde kendisi
+hatırlatıyor. Ölçüt iki tane; hangisi önce dolarsa uyarı çıkıyor:
+
+- son yedeğin üzerinden **14 gün** geçmesi,
+- ya da o günden beri **40 yeni not** eklenmiş olması.
+
+Uyarı üç yerde görünür: Ayarlar’daki Yedekleme kartında, sekme çubuğundaki
+**Ayarlar** ikonunun üstünde küçük turuncu bir nokta olarak, ve günlük tekrar
+bittiğinde çıkan ekranda *Şimdi yedek al* düğmesiyle. Sonuncusu bilinçli:
+hatırlatmak için doğru an, iş bitmiş ve acele kalmamışken.
+
+Hiç yedek alınmamışsa ve 20’den fazla not varsa uyarı doğrudan çıkar.
+
+> Uygulama, *Dışa aktar*’a bastığın anı yedek zamanı olarak kaydeder. Dosyayı
+> kaydetmekten vazgeçersen bunu anlayamaz — iOS bunu tarayıcıya bildirmiyor.
+> Yedek aldığını sandığın hâlde almamak istemiyorsan, dosyanın Dosyalar’a
+> düştüğünü ilk seferlerde gözünle doğrula.
+
 ---
 
 ## Güncelleme yaparken

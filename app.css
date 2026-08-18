@@ -166,6 +166,14 @@ nav.tabs button {
 }
 nav.tabs button .ic { font-size: 19px; line-height: 1; }
 nav.tabs button.on { color: var(--accent); }
+nav.tabs .dot {
+  position: absolute;
+  transform: translate(14px, -6px);
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--warn);
+}
 nav.tabs .badge {
   position: absolute;
   transform: translate(16px, -4px);
@@ -412,3 +420,4 @@ details.help pre {
 .notice.warn { border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
 .notice.ok { border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
 .notice b { display: block; margin-bottom: 3px; }
+.notice > button { margin-top: 10px; }

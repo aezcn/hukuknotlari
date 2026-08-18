@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Hukuk Notları">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="app.css?v=9">
+<link rel="stylesheet" href="app.css?v=10">
 </head>
 <body>
 
@@ -187,6 +187,7 @@ Zamanaşımı süresi :: 10 yıl
       <div class="tiny muted" style="margin:4px 0 10px">
         Notlar sadece bu cihazda tutuluyor. Ara sıra dışa aktarıp yedek al.
       </div>
+      <div id="backupStatus"></div>
       <div class="row">
         <button id="exportBtn">Dışa aktar</button>
         <button id="importBtn">İçe aktar</button>
@@ -215,7 +216,7 @@ Zamanaşımı süresi :: 10 yıl
   <button data-view="notlar"><span class="ic">📚</span>Notlar</button>
   <button data-view="ekle"><span class="ic">➕</span>Ekle</button>
   <button data-view="istatistik"><span class="ic">📊</span>İstatistik</button>
-  <button data-view="ayarlar"><span class="ic">⚙️</span>Ayarlar</button>
+  <button data-view="ayarlar"><span class="ic">⚙️</span>Ayarlar<span class="dot hidden" id="tabDot"></span></button>
 </nav>
 
 <datalist id="dersList"></datalist>
@@ -325,10 +326,10 @@ Zamanaşımı süresi :: 10 yıl
   </div>
 </dialog>
 
-<script src="config.js?v=9"></script>
-<script src="db.js?v=9"></script>
-<script src="srs.js?v=9"></script>
-<script src="parse.js?v=9"></script>
-<script src="app.js?v=9"></script>
+<script src="config.js?v=10"></script>
+<script src="db.js?v=10"></script>
+<script src="srs.js?v=10"></script>
+<script src="parse.js?v=10"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

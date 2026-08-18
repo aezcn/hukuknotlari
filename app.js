@@ -87,10 +87,74 @@
   function reload() {
     return DB.all().then(function (list) {
       state.notes = list;
+      return DB.getMeta('lastBackup', null);
+    }).then(function (b) {
+      state.backup = computeBackup(b);
       refreshDersList();
       updateBadge();
+      updateBackupDot();
       render();
     });
+  }
+
+  // =========================================================================
+  // Yedek durumu
+  // =========================================================================
+  var BACKUP_DAYS = 14;   /* bu kadar gun gecerse hatirlat */
+  var BACKUP_NEW = 40;    /* ya da bu kadar yeni not birikirse */
+
+  function computeBackup(b) {
+    var total = state.notes.length;
+    var out = { level: 'ok', days: null, yeni: 0, hic: !b || !b.at, total: total };
+    if (!total) return out;
+    if (out.hic) {
+      out.yeni = total;
+      out.level = total >= 20 ? 'warn' : 'ok';
+      return out;
+    }
+    out.days = Math.floor((Date.now() - b.at) / 86400000);
+    out.yeni = state.notes.filter(function (n) { return (n.created || 0) > b.at; }).length;
+    out.level = (out.days >= BACKUP_DAYS || out.yeni >= BACKUP_NEW) ? 'warn' : 'ok';
+    return out;
+  }
+
+  function backupText(b) {
+    if (b.hic) {
+      return 'Hiç yedek almadın. ' + b.total + ' not yalnızca bu telefonda duruyor — ' +
+        'telefon kaybolursa geri gelmez.';
+    }
+    var ne = b.days === 0 ? 'bugün' : (b.days === 1 ? 'dün' : b.days + ' gün önce');
+    return 'Son yedek ' + ne + ' alındı' +
+      (b.yeni ? ' · o günden beri ' + b.yeni + ' yeni not eklendi' : '') + '.';
+  }
+
+  function updateBackupDot() {
+    var el = $('#tabDot');
+    if (!el) return;
+    el.classList.toggle('hidden', !(state.backup && state.backup.level === 'warn'));
+  }
+
+  function renderBackupStatus() {
+    var el = $('#backupStatus');
+    if (!el) return;
+    var b = state.backup;
+    if (!b || !b.total) { el.className = 'hidden'; el.innerHTML = ''; return; }
+    el.className = 'notice ' + (b.level === 'warn' ? 'warn' : 'ok');
+    el.innerHTML = '<b>' + (b.level === 'warn' ? 'Yedek almanın zamanı' : 'Yedek güncel') +
+      '</b>' + esc(backupText(b));
+  }
+
+  /* Oturum sonu, yedek hatirlatmak icin dogru an: is bitmis, acele yok. */
+  function backupNudge() {
+    var b = state.backup;
+    if (!b || b.level !== 'warn') return '';
+    return '<div class="notice warn"><b>Yedek almanın zamanı</b>' + esc(backupText(b)) +
+      '<button class="wide" id="nudgeBackup">Şimdi yedek al</button></div>';
+  }
+
+  function bindBackupNudge() {
+    var el = $('#nudgeBackup');
+    if (el) el.addEventListener('click', doExport);
   }
 
   // =========================================================================
@@ -120,7 +184,7 @@
     if (state.view === 'bugun') renderStudy();
     else if (state.view === 'notlar') renderList();
     else if (state.view === 'istatistik') renderStats();
-    else if (state.view === 'ayarlar') renderPushStatus();
+    else if (state.view === 'ayarlar') { renderPushStatus(); renderBackupStatus(); }
     else $('#viewSub').textContent = '';
   }
 
@@ -179,9 +243,10 @@
           (next ? 'Sıradaki tekrar: ' + esc(prettyDate(next)) : 'Sırada bekleyen kart yok.') +
           '</span></div>' +
           '<button class="wide" id="aheadBtn">Yine de çalış (ileriden 20 kart)</button>' +
-          drillCard();
+          '<div class="spacer"></div>' + backupNudge() + drillCard();
         $('#aheadBtn').addEventListener('click', studyAhead);
         bindDrillEntry();
+        bindBackupNudge();
         return;
       }
       wrap.innerHTML =
@@ -216,8 +281,9 @@
         $('#newDrill').addEventListener('click', function () { openDrill({}); });
       } else {
         wrap.innerHTML = '<div class="empty"><div class="big">🎉</div>' +
-          'Oturum tamamlandı — ' + s.done + ' tekrar.</div>' + drillCard();
+          'Oturum tamamlandı — ' + s.done + ' tekrar.</div>' + backupNudge() + drillCard();
         bindDrillEntry();
+        bindBackupNudge();
       }
       updateBadge();
       return;
@@ -1213,6 +1279,8 @@
       a.click();
       setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
       toast('Yedek indirildi');
+      return DB.setMeta('lastBackup', { at: Date.now(), count: state.notes.length })
+        .then(reload);
     });
   }
 
