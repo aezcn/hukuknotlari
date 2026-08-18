@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Hukuk Notları">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="app.css?v=4">
 </head>
 <body>
 
@@ -184,6 +184,11 @@ Zamanaşımı süresi :: 10 yıl
 
 </main>
 
+<div id="updateBar" class="hidden">
+  <span>Yeni sürüm hazır</span>
+  <button id="updateReload">Yenile</button>
+</div>
+
 <nav class="tabs">
   <button data-view="bugun" class="on"><span class="ic">📅</span>Bugün<span class="badge hidden" id="tabBadge">0</span></button>
   <button data-view="notlar"><span class="ic">📚</span>Notlar</button>
@@ -298,10 +303,10 @@ Zamanaşımı süresi :: 10 yıl
   </div>
 </dialog>
 
-<script src="config.js"></script>
-<script src="db.js"></script>
-<script src="srs.js"></script>
-<script src="parse.js"></script>
-<script src="app.js"></script>
+<script src="config.js?v=4"></script>
+<script src="db.js?v=4"></script>
+<script src="srs.js?v=4"></script>
+<script src="parse.js?v=4"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

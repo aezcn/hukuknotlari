@@ -1,19 +1,23 @@
 /* Service worker: cevrimdisi calisma + push bildirimi.
    Bildirim metni CIHAZDA uretilir; sunucu bos bir push gonderir, icerik disari cikmaz. */
 
-importScripts('config.js', 'db.js');
+/* SURUM: index.html'deki ?v= degeri ile ayni olmali.
+   Ikisini birden artirmak icin: tools/bump.sh */
+var VERSION = 'v4';
+var ASSET_V = VERSION.slice(1);
 
-var VERSION = 'v3';
+importScripts('config.js?v=' + ASSET_V, 'db.js?v=' + ASSET_V);
+
 var CACHE = 'hukuknotlari-' + VERSION;
 var SHELL = [
   './',
   './index.html',
-  './app.css',
-  './config.js',
-  './db.js',
-  './srs.js',
-  './parse.js',
-  './app.js',
+  './app.css?v=' + ASSET_V,
+  './config.js?v=' + ASSET_V,
+  './db.js?v=' + ASSET_V,
+  './srs.js?v=' + ASSET_V,
+  './parse.js?v=' + ASSET_V,
+  './app.js?v=' + ASSET_V,
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -33,10 +37,24 @@ self.addEventListener('install', function (e) {
 self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
+      /* Eski bir surum onbellegi varsa bu bir GUNCELLEME'dir, ilk kurulum degil.
+         Ayrimi burada yapiyoruz; ilk kurulumda "yeni surum" seridi cikmasin. */
+      var wasUpdate = keys.some(function (k) {
+        return k !== CACHE && k.indexOf('hukuknotlari-') === 0;
+      });
       return Promise.all(keys.map(function (k) {
         if (k !== CACHE) return caches.delete(k);
-      }));
-    }).then(function () { return self.clients.claim(); })
+      })).then(function () { return wasUpdate; });
+    }).then(function (wasUpdate) {
+      return self.clients.claim().then(function () {
+        if (!wasUpdate) return;
+        return self.clients.matchAll({ type: 'window' }).then(function (list) {
+          list.forEach(function (c) {
+            c.postMessage({ type: 'hn-updated', version: VERSION });
+          });
+        });
+      });
+    })
   );
 });
 

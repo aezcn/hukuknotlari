@@ -25,6 +25,7 @@ uygulama gibi davranır ve **kilit ekranına bildirim düşürür**.
 | `config.js` | **Kurulumda doldurulacak** iki değer |
 | `manifest.webmanifest`, `icons/` | Ana ekran uygulaması kimliği |
 | `tools/vapid.html` | VAPID anahtar çifti üretici (tarayıcıda çalışır) |
+| `tools/bump.sh` | Sürüm artırıcı — her deploy öncesi çalıştır |
 | `worker/src/index.js` | Cloudflare Worker — push zamanlayıcı |
 | `ornek-notlar.txt` | Başlangıç için örnek toplu not metni |
 
@@ -199,13 +200,36 @@ yenileri eklenir, mevcut ilerleme silinmez.
 
 ## Güncelleme yaparken
 
-Uygulama dosyalarını değiştirdiğinde `sw.js` içindeki satırı bir artır:
+Uygulama dosyalarını her değiştirdiğinde, push etmeden önce sürümü artır:
 
-```js
-var VERSION = 'v2';   // v1 -> v2
+```bash
+sh tools/bump.sh
 ```
 
-Yoksa telefonlar eski sürümü önbellekten göstermeye devam eder.
+Bu komut üç yeri birlikte günceller — üçünün de aynı sayıda olması şart:
+
+| Yer | Ne işe yarıyor |
+|---|---|
+| `sw.js` → `VERSION` | Önbelleği tazeler, eskisini siler |
+| `index.html` → `?v=` | Tarayıcıyı yeni JS/CSS'i ağdan çekmeye zorlar |
+| `config.js` → `HN_VERSION` | Ayarlar'ın en altında görünen sürüm |
+
+`?v=` işaretleri önemli: onlar olmadan tarayıcı yeni `index.html` ile eski
+`app.js`'i eşleştirebiliyor ve ikisi uyuşmazsa uygulama açılışta bozuluyor.
+
+### Telefonda ne oluyor
+
+Uygulama ana ekrandan açıldığında yeni sürüm kendiliğinden iniyor, ekranda
+**“Yeni sürüm hazır — Yenile”** şeridi çıkıyor. Şeride basmak yeterli;
+basılmazsa bir sonraki açılışta zaten yeni sürümle açılır.
+
+Notlar bundan hiç etkilenmiyor: IndexedDB'de duruyorlar, önbellek silinse de
+yerinde kalıyorlar. Sürüm atlamak veri kaybettirmez.
+
+> `db.js` içindeki `DB_VERSION` ayrı bir konu — ona dokunmak veritabanı şeması
+> değiştirmek demek ve `onupgradeneeded` içine geçiş yazmayı gerektirir.
+> Yeni alan eklemek için gerekmiyor; sadece yeni kodun eski notlarda o alanı
+> bulamayacağını hesaba katıp `n.tags || []` gibi savunmacı yazmak yeterli.
 
 ---
 
@@ -229,7 +253,7 @@ orada da çalışır (push için Worker adresini doldurman gerekir).
 | İzin isteme ekranı hiç çıkmıyor | Daha önce reddedilmiş: iOS Ayarlar → Bildirimler → Hukuk Notları |
 | Test bildirimi 502 dönüyor | Worker’daki `VAPID_PRIVATE_JWK` / `VAPID_PUBLIC_KEY` eşleşmiyor — ikisini de aynı üretimden al |
 | Test çalışıyor ama zamanlı bildirim gelmiyor | Cron tetikleyicisi eklenmemiş (Adım 3d) ya da saat dilimi yanlış; bildirimi kapatıp aç |
-| Değişiklik telefona yansımıyor | `sw.js` içindeki `VERSION` artırılmamış |
+| Değişiklik telefona yansımıyor | Sürüm artırılmamış — `sh tools/bump.sh` çalıştırıp tekrar push et |
 
 ---
 

@@ -32,6 +32,15 @@
     toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
   }
 
+  function showUpdateBar() {
+    var bar = $('#updateBar');
+    if (!bar || !bar.classList.contains('hidden')) return;
+    /* Çalışma ortasında sayfayı yenilemek oturumu düşürür; uyarısını ver. */
+    $('#updateReload').previousElementSibling.textContent =
+      state.session ? 'Yeni sürüm hazır — oturum sonunda yenile' : 'Yeni sürüm hazır';
+    bar.classList.remove('hidden');
+  }
+
   var TYPE_LABEL = {
     kart: 'Kart', not: 'Not', madde: 'Madde',
     sure: 'Süre', karsilastirma: 'Karıştırılanlar'
@@ -45,7 +54,16 @@
       navigator.serviceWorker.register('sw.js').catch(function (e) {
         console.warn('SW kaydı başarısız', e);
       });
+      /* Yeni sürüm devreye girdiğinde service worker haber veriyor.
+         Sayfa hâlâ eski dosyalarla çalıştığı için yenilemeyi kullanıcıya bırakıyoruz. */
+      navigator.serviceWorker.addEventListener('message', function (e) {
+        if (e.data && e.data.type === 'hn-updated') showUpdateBar();
+      });
     }
+
+    $('#updateReload').addEventListener('click', function () {
+      location.reload();
+    });
 
     bindTabs();
     bindAdd();
