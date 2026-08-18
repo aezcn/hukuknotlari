@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Hukuk Notları">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="app.css?v=4">
+<link rel="stylesheet" href="app.css?v=7">
 </head>
 <body>
 
@@ -49,18 +49,36 @@
     <div class="spacer"></div>
     <div class="tiny muted" id="listCount"></div>
     <div class="spacer"></div>
+    <div id="quickBar" class="notice hidden"></div>
     <div id="list"></div>
   </section>
 
   <!-- ============ EKLE ============ -->
   <section class="view" id="view-ekle">
     <div class="row" style="margin-bottom:12px">
+      <button id="modeQuick" class="ghost">Hızlı</button>
       <button id="modeSingle" class="primary">Tek not</button>
-      <button id="modeBulk" class="ghost">Toplu yapıştır</button>
+      <button id="modeBulk" class="ghost">Toplu</button>
+    </div>
+
+    <div id="paneQuick" class="hidden">
+      <div class="card">
+        <div class="tiny muted" style="margin-bottom:10px">
+          Şimdi yaz, sonra düzenle. Buraya girdiklerin tekrara girmez;
+          Notlar ekranında <b>işlenmemiş</b> olarak birikir.
+        </div>
+        <label class="field"><span>Aklında ne varsa</span>
+          <textarea id="qText" style="min-height:170px" placeholder="İlk satır başlık olur, gerisi içerik.
+
+Klavyedeki mikrofona basıp konuşarak da girebilirsin."></textarea>
+        </label>
+        <button class="primary wide" id="saveQuick">Yakala</button>
+      </div>
     </div>
 
     <div id="paneSingle">
       <div class="card">
+        <div class="tiny muted" id="sCtx"></div>
         <label class="field"><span>Tür</span>
           <select id="sType">
             <option value="kart">Kart (soru → cevap)</option>
@@ -84,15 +102,18 @@
         <label class="field"><span id="lblBack">Cevap / arka yüz</span>
           <textarea id="sBack" style="min-height:120px" placeholder="Devlet. Kusursuz sorumluluk hâlidir."></textarea>
         </label>
-        <div class="row">
-          <label class="field"><span>Kaynak</span>
-            <input type="text" id="sKaynak" placeholder="TMK m.1007">
-          </label>
-          <label class="field"><span>Etiketler (boşlukla)</span>
-            <input type="text" id="sTags" placeholder="eşya tapu" autocapitalize="none">
-          </label>
-        </div>
-        <button class="primary wide" id="saveSingle">Kaydet</button>
+        <details class="more">
+          <summary>Kaynak · etiket</summary>
+          <div class="row">
+            <label class="field"><span>Kaynak</span>
+              <input type="text" id="sKaynak" placeholder="TMK m.1007">
+            </label>
+            <label class="field"><span>Etiketler (boşlukla)</span>
+              <input type="text" id="sTags" placeholder="eşya tapu" autocapitalize="none">
+            </label>
+          </div>
+        </details>
+        <button class="primary wide" id="saveSingle">Kaydet ve yeni</button>
       </div>
     </div>
 
@@ -303,10 +324,10 @@ Zamanaşımı süresi :: 10 yıl
   </div>
 </dialog>
 
-<script src="config.js?v=4"></script>
-<script src="db.js?v=4"></script>
-<script src="srs.js?v=4"></script>
-<script src="parse.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="config.js?v=7"></script>
+<script src="db.js?v=7"></script>
+<script src="srs.js?v=7"></script>
+<script src="parse.js?v=7"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

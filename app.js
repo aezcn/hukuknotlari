@@ -11,6 +11,7 @@
     session: null,
     editing: null,
     pending: null,
+    quickOnly: false,
     limit: CFG.DAILY_LIMIT || 60
   };
 
@@ -267,13 +268,11 @@
             grade('kolay', 'Kolay', note) +
           '</div>') +
       '<div class="spacer"></div>' +
-      '<div class="row"><button class="ghost small" id="editCur">Bu notu düzenle</button>' +
-      '<button class="ghost small" id="stopBtn">Oturumu bitir</button></div>';
+      studyFoot(s);
     } else {
       html += '<div class="spacer"></div><button class="primary wide" id="showBtn">Cevabı göster</button>' +
         '<div class="spacer"></div>' +
-        '<div class="row"><button class="ghost small" id="editCur">Bu notu düzenle</button>' +
-        '<button class="ghost small" id="stopBtn">Oturumu bitir</button></div>';
+        studyFoot(s);
     }
 
     wrap.innerHTML = html;
@@ -284,10 +283,19 @@
     $$('.grades button').forEach(function (b) {
       b.addEventListener('click', function () { answer(note, b.dataset.g); });
     });
+    if ($('#undoBtn')) $('#undoBtn').addEventListener('click', undoLast);
     $('#editCur').addEventListener('click', function () { openEditor(note); });
     $('#stopBtn').addEventListener('click', function () {
       state.session = null; renderStudy(); updateBadge();
     });
+  }
+
+  function studyFoot(s) {
+    return '<div class="row study-foot">' +
+      ((s.undo && s.undo.length)
+        ? '<button class="ghost small" id="undoBtn">Geri al</button>' : '') +
+      '<button class="ghost small" id="editCur">Düzenle</button>' +
+      '<button class="ghost small" id="stopBtn">Oturumu bitir</button></div>';
   }
 
   function grade(g, label, note) {
@@ -307,6 +315,7 @@
     var s0 = state.session;
     if (s0 && s0.mode === 'serbest' && !s0.reschedule) return answerDrill(note, rating);
 
+    pushUndo(note, true);
     var r = SRS.review(note.srs, rating);
     note.srs = r.srs;
     note.updated = Date.now();
@@ -323,6 +332,47 @@
     renderStudy();
   }
 
+  /* Cevaptan ONCE oturumun ve kartin halini sakla; "Geri al" bunu geri yukler. */
+  function pushUndo(note, graded) {
+    var s = state.session;
+    if (!s) return;
+    s.undo = s.undo || [];
+    s.undo.push({
+      id: note.id,
+      graded: !!graded,
+      srs: graded ? JSON.parse(JSON.stringify(note.srs)) : null,
+      updated: note.updated,
+      queue: s.queue.slice(),
+      done: s.done,
+      missed: s.missed ? s.missed.slice() : null,
+      retries: s.retries ? JSON.parse(JSON.stringify(s.retries)) : null
+    });
+    if (s.undo.length > 30) s.undo.shift();
+  }
+
+  function undoLast() {
+    var s = state.session;
+    if (!s || !s.undo || !s.undo.length) return;
+    var u = s.undo.pop();
+    var note = byId(u.id);
+
+    s.queue = u.queue;
+    s.done = u.done;
+    if (u.missed) s.missed = u.missed;
+    if (u.retries) s.retries = u.retries;
+    s.revealed = true;          /* kart cevabi acik halde geri gelsin, yeniden puanlansin */
+    unlogReview();
+
+    if (u.graded && note) {
+      note.srs = u.srs;
+      note.updated = u.updated;
+      DB.put(note).then(function () { updateBadge(); renderStudy(); });
+    } else {
+      renderStudy();
+    }
+    toast('Geri alındı');
+  }
+
   /* Ard arda hizli cevaplarda sayac kaybolmasin diye sirayla yazilir. */
   var logChain = Promise.resolve();
   function logReview() {
@@ -331,6 +381,21 @@
       return DB.getMeta('log', {}).then(function (log) {
         log = log || {};
         log[d] = (log[d] || 0) + 1;
+        return DB.setMeta('log', log);
+      });
+    }).catch(function () {});
+    return logChain;
+  }
+
+  function unlogReview() {
+    var d = SRS.today();
+    logChain = logChain.then(function () {
+      return DB.getMeta('log', {}).then(function (log) {
+        log = log || {};
+        if (log[d]) {
+          log[d]--;
+          if (!log[d]) delete log[d];
+        }
         return DB.setMeta('log', log);
       });
     }).catch(function () {});
@@ -515,6 +580,7 @@
   /* Plan etkilenmeyen serbest calismada cevap: sadece pratik. */
   function answerDrill(note, rating) {
     var s = state.session;
+    pushUndo(note, false);
     s.queue.shift();
     s.done++;
     s.revealed = false;
@@ -591,10 +657,13 @@
     var tip = $('#fTip').value;
 
     var out = state.notes.filter(function (n) {
+      if (state.quickOnly && !n.quick) return false;
       if (ders && n.ders !== ders) return false;
       if (tip && n.type !== tip) return false;
       return P.matches(n, q);
     }).sort(function (a, b) { return b.updated - a.updated; });
+
+    renderQuickBar();
 
     $('#listCount').textContent = out.length + ' not' +
       (out.length !== state.notes.length ? ' (toplam ' + state.notes.length + ')' : '');
@@ -623,20 +692,53 @@
           (n.kaynak ? '<span class="pill gold">' + esc(n.kaynak) + '</span>' : '') +
           '<span class="pill">' + esc(when) + '</span>' +
           (n.suspended ? '<span class="pill">bekletiliyor</span>' : '') +
+          (n.quick ? '<span class="pill gold">işlenmemiş</span>' : '') +
         '</div>' +
+        '<div class="note-act"><button class="ghost small" data-edit="' + n.id + '">Düzenle</button></div>' +
       '</div>';
     }).join('') +
     (out.length > 300 ? '<div class="tiny muted center">İlk 300 gösteriliyor — aramayı daralt.</div>' : '');
 
     $$('#list .note-item').forEach(function (el) {
-      var tapped = 0;
-      el.addEventListener('click', function () {
-        var now = Date.now();
-        if (now - tapped < 400) { openEditor(byId(el.dataset.id)); tapped = 0; return; }
-        tapped = now;
-        el.classList.toggle('open');
+      el.addEventListener('click', function () { el.classList.toggle('open'); });
+    });
+    $$('#list [data-edit]').forEach(function (b) {
+      b.addEventListener('click', function (ev) {
+        ev.stopPropagation();          /* nota dokunmayla karismasin */
+        openEditor(byId(b.dataset.edit));
       });
     });
+  }
+
+  /* Hizli yakalanmis, henuz elden gecmemis notlarin seridi. */
+  function renderQuickBar() {
+    var bar = $('#quickBar');
+    var n = state.notes.filter(function (x) { return x.quick; }).length;
+
+    if (!n && !state.quickOnly) { bar.classList.add('hidden'); return; }
+    bar.classList.remove('hidden');
+
+    if (state.quickOnly) {
+      bar.innerHTML = '<b>İşlenmemiş notlar' + (n ? ' (' + n + ')' : '') + '</b>' +
+        'Her birine dokun, açılınca <b style="display:inline">Düzenle</b> de. ' +
+        'Tür ve ders verdiğinde tekrara girmeye başlar.' +
+        '<button class="ghost small" id="quickAllBtn">Tüm notlara dön</button>';
+      $('#quickAllBtn').addEventListener('click', function () {
+        state.quickOnly = false;
+        renderList();
+      });
+    } else {
+      bar.innerHTML = '<b>' + n + ' işlenmemiş not</b>' +
+        'Hızlı yakaladıkların burada bekliyor — tür ve ders verilene kadar tekrara girmezler.' +
+        '<button class="ghost small" id="quickOnlyBtn">Göster</button>';
+      $('#quickOnlyBtn').addEventListener('click', function () {
+        state.quickOnly = true;
+        $('#q').value = '';
+        $('#fDers').value = '';
+        $('#fTip').value = '';
+        renderList();
+      });
+    }
   }
 
   function refreshDersList() {
@@ -656,8 +758,26 @@
   // Ekleme
   // =========================================================================
   function bindAdd() {
+    $('#modeQuick').addEventListener('click', function () { setAddMode('quick'); });
     $('#modeSingle').addEventListener('click', function () { setAddMode('single'); });
     $('#modeBulk').addEventListener('click', function () { setAddMode('bulk'); });
+
+    $('#sDers').addEventListener('input', updateCtxLine);
+    $('#sKonu').addEventListener('input', updateCtxLine);
+    $('#saveQuick').addEventListener('click', saveQuick);
+
+    /* Son kullanilan ders/konu/tur bir sonraki acilista hazir gelsin. */
+    DB.getMeta('lastCtx', null).then(function (c) {
+      if (c) {
+        if (c.ders && c.ders !== 'Genel') $('#sDers').value = c.ders;
+        if (c.konu) $('#sKonu').value = c.konu;
+        if (c.type) {
+          $('#sType').value = c.type;
+          $('#sType').dispatchEvent(new Event('change'));
+        }
+      }
+      updateCtxLine();
+    });
 
     $('#sType').addEventListener('change', function () {
       var v = $('#sType').value;
@@ -678,10 +798,51 @@
   }
 
   function setAddMode(m) {
+    $('#paneQuick').classList.toggle('hidden', m !== 'quick');
     $('#paneSingle').classList.toggle('hidden', m !== 'single');
-    $('#paneBulk').classList.toggle('hidden', m === 'single');
+    $('#paneBulk').classList.toggle('hidden', m !== 'bulk');
+    $('#modeQuick').className = m === 'quick' ? 'primary' : 'ghost';
     $('#modeSingle').className = m === 'single' ? 'primary' : 'ghost';
     $('#modeBulk').className = m === 'bulk' ? 'primary' : 'ghost';
+    if (m === 'quick') $('#qText').focus();
+  }
+
+  function updateCtxLine() {
+    var d = $('#sDers').value.trim();
+    var k = $('#sKonu').value.trim();
+    $('#sCtx').textContent = d
+      ? ('Şu an yazdığın yer: ' + d + (k ? ' / ' + k : '') + ' — kaydettikçe burada kalır')
+      : 'Ders yazarsan sonraki notlarda hazır gelir.';
+  }
+
+  /* Hizli yakalama: yapiyi sonraya birak, simdi sadece kaydet.
+     Tur 'not' oldugu icin tekrara girmez; quick isareti "islenmemis" demek. */
+  function saveQuick() {
+    var text = $('#qText').value.trim();
+    if (!text) return toast('Önce bir şeyler yaz');
+    var lines = text.split('\n');
+    var first = lines[0].trim();
+    var rest = lines.slice(1).join('\n').trim();
+    var now = Date.now();
+    var note = {
+      id: P.uid(),
+      type: 'not',
+      ders: $('#sDers').value.trim() || 'Genel',
+      konu: $('#sKonu').value.trim(),
+      front: first || text.slice(0, 60),
+      back: rest,
+      kaynak: '',
+      tags: [],
+      created: now, updated: now, suspended: false,
+      quick: true,
+      srs: SRS.fresh()
+    };
+    DB.put(note).then(function () {
+      $('#qText').value = '';
+      $('#qText').focus();
+      toast('Yakalandı — sonra düzenlersin');
+      return reload();
+    });
   }
 
   function saveSingle() {
@@ -703,10 +864,12 @@
       srs: SRS.fresh()
     };
     DB.put(note).then(function () {
+      DB.setMeta('lastCtx', { ders: note.ders, konu: note.konu, type: note.type });
       $('#sFront').value = ''; $('#sBack').value = '';
       $('#sKaynak').value = ''; $('#sTags').value = '';
       $('#sFront').focus();
-      toast('Kaydedildi');
+      updateCtxLine();
+      toast('Kaydedildi — sıradaki');
       return reload();
     });
   }
@@ -825,6 +988,7 @@
       return t.replace(/^#/, '');
     });
     e.updated = Date.now();
+    if (e.quick) delete e.quick;   /* elden gecti, artik islenmemis degil */
     if (!e.front) return toast('Ön yüz boş olamaz');
     DB.put(e).then(function () {
       $('#editDlg').close();

@@ -124,6 +124,21 @@ Değiştirip repoya push et. Pages birkaç saniyede günceller.
 
 ---
 
+## Not girmenin üç yolu
+
+**Hızlı** — aklına geleni tek kutuya yaz, yapıyı sonraya bırak. İlk satır başlık,
+gerisi içerik olur. Bunlar tekrara girmez; Notlar ekranında *işlenmemiş* olarak
+birikir ve şeritteki **Göster** ile hepsini bulursun. Birine tür ve ders verip
+kaydettiğin anda normal kart olur, tekrar sırasına girer. Uzun içerikleri
+klavyedeki mikrofona basıp konuşarak girmek yazmaktan çok daha hızlı.
+
+**Tek not** — alışıldık form. Ders ve konu kaydettikten sonra silinmez, sıradaki
+notta hazır bekler; uygulamayı kapatıp açsan bile hatırlanır. Böylece aynı
+konudan arka arkaya not girerken sadece soru ve cevap yazarsın. Kaynak ve etiket
+alanları *Kaynak · etiket* başlığının altında katlı durur, ihtiyaç oldukça açılır.
+
+**Toplu** — hazır bir metni tek seferde aktarmak için. Biçimi aşağıda.
+
 ## Not yazım biçimi (toplu yapıştırma)
 
 ```
@@ -151,7 +166,11 @@ yapıştırarak deneyebilirsin.
 
 - **Bugün**: tekrarı gelen kartlar. Cevabı gör → *Tekrar / Zor / Normal / Kolay*.
   Butonların altındaki süre, o seçenekte kartın ne zaman geri geleceğini gösterir.
-- **Notlar**: arama ve filtreleme. Bir nota dokun → açılır; **çift dokun** → düzenle.
+  Yanlış tuşa bastıysan **Geri al** — kart cevabı açık hâlde geri gelir, tekrar
+  puanlarsın. Arka arkaya basarak birkaç kart geri gidebilirsin; seri sayacı da
+  düzelir. Geri alma yalnızca o oturum içinde geçerlidir.
+- **Notlar**: arama ve filtreleme. Bir nota dokun → açılır, içindeki **Düzenle**
+  düğmesiyle değiştirirsin.
 - **İstatistik**: seri, geçmiş çalışma, önümüzdeki günlerin yükü, ders bazlı ilerleme.
 - Bir konuyu bir süre görmek istemiyorsan notu düzenleyip **Beklet** de.
 
