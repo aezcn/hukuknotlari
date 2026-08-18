@@ -3,7 +3,7 @@
 
 importScripts('config.js', 'db.js');
 
-var VERSION = 'v2';
+var VERSION = 'v3';
 var CACHE = 'hukuknotlari-' + VERSION;
 var SHELL = [
   './',
