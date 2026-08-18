@@ -13,6 +13,7 @@
   --bad: #b02a2a;
   --radius: 14px;
   --tap: 44px;
+  --read: 1;          /* okuma metinleri icin olcek — Ayarlar'dan degisir */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -110,7 +111,10 @@ input[type=text], input[type=search], input[type=time], select, textarea {
   -webkit-appearance: none;
   appearance: none;
 }
-textarea { min-height: 160px; resize: vertical; line-height: 1.55; font-size: 15px; }
+/* 16px'in ALTINA inme: iOS, kucuk puntolu alana dokununca sayfayi kendiliginde
+   yakinlastiriyor. Eskiden bunu viewport'taki maximum-scale=1 bastiriyordu ama
+   o kural pinch-zoom'u da engelliyordu. */
+textarea { min-height: 160px; resize: vertical; line-height: 1.55; font-size: 16px; }
 label.field { display: block; margin-bottom: 10px; }
 label.field > span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: 550; }
 
@@ -198,9 +202,12 @@ nav.tabs .badge {
   gap: 12px;
 }
 .study-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.study-front { font-size: 19px; font-weight: 600; line-height: 1.45; white-space: pre-wrap; }
+.study-front {
+  font-size: calc(19px * var(--read));
+  font-weight: 600; line-height: 1.45; white-space: pre-wrap;
+}
 .study-back {
-  font-size: 16px;
+  font-size: calc(16px * var(--read));
   line-height: 1.6;
   white-space: pre-wrap;
   border-top: 1px dashed var(--line);
@@ -250,8 +257,8 @@ nav.tabs .badge {
   padding: 11px 12px;
   margin-bottom: 8px;
 }
-.note-item .nf { font-weight: 600; font-size: 15px; line-height: 1.4; }
-.note-item .nb { color: var(--muted); font-size: 13.5px; margin-top: 4px; line-height: 1.45;
+.note-item .nf { font-weight: 600; font-size: calc(15px * var(--read)); line-height: 1.4; }
+.note-item .nb { color: var(--muted); font-size: calc(13.5px * var(--read)); margin-top: 4px; line-height: 1.45;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .note-item .meta { margin-top: 7px; }
 .note-item.open .nb { -webkit-line-clamp: unset; white-space: pre-wrap; }

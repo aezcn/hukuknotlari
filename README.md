@@ -173,6 +173,10 @@ yapıştırarak deneyebilirsin.
   düğmesiyle değiştirirsin.
 - **İstatistik**: seri, geçmiş çalışma, önümüzdeki günlerin yükü, ders bazlı ilerleme,
   takılan kartlar.
+- **Ayarlar → Yazı boyutu**: kart ve not metinleri için dört kademe. Seçtiğin an
+  altındaki örnek kartta görürsün. Sekme çubuğu ve etiketler sabit kalır —
+  büyüyen şey okuduğun metin.
+- Ekranı iki parmakla açarak yakınlaştırabilirsin; uzun madde metinlerinde işe yarar.
 - Bir konuyu bir süre görmek istemiyorsan notu düzenleyip **Beklet** de.
 
 ### Serbest çalışma

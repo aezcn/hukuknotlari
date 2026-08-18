@@ -1248,6 +1248,15 @@
       DB.setMeta('limit', v).then(function () { toast('Kaydedildi'); });
     });
 
+    segmented('#fontSize', function () {
+      var v = Number(segValue('#fontSize')) || 1;
+      applyRead(v);
+      DB.setMeta('read', v);
+    });
+    DB.getMeta('read', 1).then(function (v) {
+      applyRead(setReadButtons(Number(v) || 1));
+    });
+
     $('#exportBtn').addEventListener('click', doExport);
     $('#importBtn').addEventListener('click', function () { $('#importFile').click(); });
     $('#importFile').addEventListener('change', doImport);
@@ -1259,6 +1268,28 @@
     });
 
     $('#buildInfo').textContent = 'Hukuk Notları · sürüm ' + (self.HN_VERSION || '1.0');
+  }
+
+  /* Okuma metinlerinin olcegi. Cerceve (sekme, etiket) sabit kaliyor;
+     buyuyen sey kartin ve notun kendisi. */
+  function applyRead(v) {
+    document.documentElement.style.setProperty('--read', String(v));
+  }
+
+  function setReadButtons(v) {
+    var found = false;
+    $$('#fontSize button').forEach(function (b) {
+      var on = Number(b.dataset.v) === v;
+      if (on) found = true;
+      b.classList.toggle('on', on);
+    });
+    if (!found) {
+      v = 1;
+      $$('#fontSize button').forEach(function (b) {
+        b.classList.toggle('on', Number(b.dataset.v) === 1);
+      });
+    }
+    return v;
   }
 
   function doExport() {
