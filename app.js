@@ -42,6 +42,78 @@
     bar.classList.remove('hidden');
   }
 
+  /* Her ders kendi rengini alsin diye adindan sabit bir ton uretiyoruz.
+     Rastgele degil, elle secilmis sekiz tondan biri — hepsi bir arada uyumlu. */
+  var DERS_HUES = [212, 338, 32, 158, 268, 14, 188, 292, 96, 50];
+
+  /* Ton, ders adindan hesaplanmiyor: bir kez atanip saklaniyor. Hesaplasaydik
+     iki ders ayni tonu kapabilirdi ve renk kimligi anlamini yitirirdi.
+     Atama en az kullanilan tonu secer, sonra bir daha degismez. */
+  function ensureDersColors() {
+    var map = state.dersColors || {};
+    var used = {};
+    Object.keys(map).forEach(function (k) { used[map[k]] = (used[map[k]] || 0) + 1; });
+    var changed = false;
+
+    dersNames().forEach(function (n) {
+      var key = P.norm(n);
+      if (map[key] !== undefined) return;
+      var best = DERS_HUES[0], bestN = Infinity;
+      DERS_HUES.forEach(function (h) {
+        var c = used[h] || 0;
+        if (c < bestN) { bestN = c; best = h; }
+      });
+      map[key] = best;
+      used[best] = (used[best] || 0) + 1;
+      changed = true;
+    });
+
+    state.dersColors = map;
+    if (changed) DB.setMeta('dersColors', map);
+  }
+
+  function dersHue(name) {
+    var key = P.norm(name || 'genel');
+    var m = state.dersColors || {};
+    if (m[key] !== undefined) return m[key];
+    var h = 0;
+    for (var i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 1000003;
+    return DERS_HUES[h % DERS_HUES.length];
+  }
+  function dh(name) { return ' style="--dh:' + dersHue(name) + '"'; }
+
+  var ICONS = {
+    bos:    '<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    bitti:  '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+    kutla:  '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/>',
+    hedef:  '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>'
+  };
+  function icon(name, size) {
+    return '<svg class="icon-empty" width="' + (size || 40) + '" height="' + (size || 40) + '" ' +
+      'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+      'stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg>';
+  }
+
+  /* Halkanin dolulugu bugunun ilerlemesi: yapilan / (yapilan + bekleyen). */
+  function ring(pct, buyuk, alt) {
+    var r = 54, c = 2 * Math.PI * r;
+    pct = Math.max(0, Math.min(1, pct || 0));
+    var off = c * (1 - pct);
+    return '<div class="ring-wrap">' +
+      '<svg class="ring" width="138" height="138" viewBox="0 0 120 120" aria-hidden="true">' +
+        '<defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1">' +
+          '<stop offset="0" style="stop-color:var(--accent-2)"/>' +
+          '<stop offset="1" style="stop-color:var(--accent)"/>' +
+        '</linearGradient></defs>' +
+        '<circle class="bg" cx="60" cy="60" r="' + r + '"/>' +
+        '<circle class="fg" cx="60" cy="60" r="' + r + '" stroke="url(#rg)" ' +
+          'style="--c:' + c.toFixed(1) + '" ' +
+          'stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"/>' +
+      '</svg>' +
+      '<div class="ring-mid"><b>' + buyuk + '</b><span>' + esc(alt) + '</span></div>' +
+    '</div>';
+  }
+
   var TYPE_LABEL = {
     kart: 'Kart', not: 'Not', madde: 'Madde',
     sure: 'Süre', karsilastirma: 'Karıştırılanlar'
@@ -90,6 +162,14 @@
       return DB.getMeta('lastBackup', null);
     }).then(function (b) {
       state.backup = computeBackup(b);
+      return DB.getMeta('log', {}).then(function (log) {
+        state.todayCount = (log || {})[SRS.today()] || 0;
+      });
+    }).then(function () {
+      return DB.getMeta('dersColors', {});
+    }).then(function (m) {
+      state.dersColors = m || {};
+      ensureDersColors();
       refreshDersList();
       updateBadge();
       updateBackupDot();
@@ -229,8 +309,9 @@
 
     if (!s) {
       $('#viewSub').textContent = '';
+      state.lastCard = null;
       if (!state.notes.length) {
-        wrap.innerHTML = '<div class="empty"><div class="big">📖</div>' +
+        wrap.innerHTML = '<div class="empty">' + icon('bos') + '' +
           'Henüz not yok.<br>“Ekle” sekmesinden başla — toplu yapıştırma en hızlısı.</div>' +
           '<button class="primary wide" id="goAdd">Not ekle</button>';
         $('#goAdd').addEventListener('click', function () { go('ekle'); });
@@ -238,7 +319,7 @@
       }
       if (!due.length) {
         var next = nextDueDate();
-        wrap.innerHTML = '<div class="empty"><div class="big">✅</div>' +
+        wrap.innerHTML = '<div class="empty">' + icon('bitti') + '' +
           'Bugünlük tekrar bitti.<br><span class="small">' +
           (next ? 'Sıradaki tekrar: ' + esc(prettyDate(next)) : 'Sırada bekleyen kart yok.') +
           '</span></div>' +
@@ -249,10 +330,12 @@
         bindBackupNudge();
         return;
       }
+      var yapilan = state.todayCount || 0;
       wrap.innerHTML =
         '<div class="card center">' +
-          '<div style="font-size:44px;font-weight:700;letter-spacing:-.03em">' + due.length + '</div>' +
-          '<div class="muted small" style="margin-bottom:14px">kart tekrar bekliyor</div>' +
+          ring(yapilan / (yapilan + due.length), due.length, 'kart bekliyor') +
+          (yapilan ? '<div class="tiny muted" style="margin:-8px 0 12px">' +
+            'bugün ' + yapilan + ' tekrar yaptın</div>' : '') +
           '<button class="primary wide" id="startBtn">Çalışmaya başla</button>' +
         '</div>' + overdueNotice(due) + drillCard();
       $('#startBtn').addEventListener('click', startSession);
@@ -265,7 +348,7 @@
       $('#viewSub').textContent = '';
       if (s.mode === 'serbest') {
         var missed = (s.missed || []).filter(function (id) { return byId(id); });
-        wrap.innerHTML = '<div class="empty"><div class="big">🎯</div>' +
+        wrap.innerHTML = '<div class="empty">' + icon('hedef') + '' +
           'Serbest çalışma bitti.<br><span class="small">' +
           esc(s.label || '') + ' · ' + s.done + ' cevap' +
           (missed.length ? ' · ' + missed.length + ' tanesini bilemedin' : ' · hepsini bildin') +
@@ -280,7 +363,7 @@
         });
         $('#newDrill').addEventListener('click', function () { openDrill({}); });
       } else {
-        wrap.innerHTML = '<div class="empty"><div class="big">🎉</div>' +
+        wrap.innerHTML = '<div class="empty">' + icon('kutla') + '' +
           'Oturum tamamlandı — ' + s.done + ' tekrar.</div>' + backupNudge() + drillCard();
         bindDrillEntry();
         bindBackupNudge();
@@ -298,6 +381,10 @@
     var note = byId(s.queue[0]);
     if (!note) { s.queue.shift(); return renderStudy(); }
 
+    /* Kart degistiyse giris animasyonu; sadece cevap acildiysa kart yerinde kalsin. */
+    var isNew = state.lastCard !== note.id;
+    state.lastCard = note.id;
+
     var pct = s.total ? Math.round((s.done / (s.done + s.queue.length)) * 100) : 0;
     $('#viewSub').textContent = s.done + ' / ' + (s.done + s.queue.length);
 
@@ -308,9 +395,9 @@
           (s.reschedule ? '' : '<span class="muted tiny">· plan etkilenmiyor</span>') + '</div>'
         : '') +
       '<div class="progress"><i style="width:' + pct + '%"></i></div>' +
-      '<div class="study-card">' +
+      '<div class="study-card' + (isNew ? ' enter' : '') + '"' + dh(note.ders) + '>' +
         '<div class="study-meta">' +
-          '<span class="pill accent">' + esc(note.ders || 'Genel') + '</span>' +
+          '<span class="pill ders">' + esc(note.ders || 'Genel') + '</span>' +
           (note.konu ? '<span class="pill">' + esc(note.konu) + '</span>' : '') +
           '<span class="pill">' + esc(TYPE_LABEL[note.type] || note.type) + '</span>' +
           (SRS.isLeech(note) ? '<span class="pill gold">takılan</span>' : '') +
@@ -420,9 +507,9 @@
         'Bu kartı ' + (note.srs.lapses || 0) + ' kez unuttun. Genelde bu, kartın tek ' +
         'seferde çok şey sorduğunu ya da ifadesinin bulanık olduğunu gösterir — ' +
         'senin çalışmadığını değil.</div>' +
-      '<div class="study-card">' +
+      '<div class="study-card enter"' + dh(note.ders) + '>' +
         '<div class="study-meta">' +
-          '<span class="pill accent">' + esc(note.ders || 'Genel') + '</span>' +
+          '<span class="pill ders">' + esc(note.ders || 'Genel') + '</span>' +
           (note.konu ? '<span class="pill">' + esc(note.konu) + '</span>' : '') +
           '<span class="pill gold">takılan</span>' +
         '</div>' +
@@ -514,6 +601,7 @@
       return DB.getMeta('log', {}).then(function (log) {
         log = log || {};
         log[d] = (log[d] || 0) + 1;
+        state.todayCount = log[d];
         return DB.setMeta('log', log);
       });
     }).catch(function () {});
@@ -529,6 +617,7 @@
           log[d]--;
           if (!log[d]) delete log[d];
         }
+        state.todayCount = log[d] || 0;
         return DB.setMeta('log', log);
       });
     }).catch(function () {});
@@ -817,11 +906,11 @@
     $('#list').innerHTML = out.slice(0, 300).map(function (n) {
       var when = n.type === 'not' ? 'not' :
         (n.srs.due <= t ? 'bugün' : prettyDate(n.srs.due));
-      return '<div class="note-item" data-id="' + n.id + '">' +
+      return '<div class="note-item" data-id="' + n.id + '"' + dh(n.ders) + '>' +
         '<div class="nf">' + esc(n.front) + '</div>' +
         (n.back ? '<div class="nb">' + esc(n.back) + '</div>' : '') +
         '<div class="meta">' +
-          '<span class="pill accent">' + esc(n.ders || 'Genel') + '</span>' +
+          '<span class="pill ders">' + esc(n.ders || 'Genel') + '</span>' +
           (n.konu ? '<span class="pill">' + esc(n.konu) + '</span>' : '') +
           (n.kaynak ? '<span class="pill gold">' + esc(n.kaynak) + '</span>' : '') +
           '<span class="pill">' + esc(when) + '</span>' +
@@ -1214,7 +1303,7 @@
         (dersArr.length ? '<div class="card"><b class="small">Derslere göre</b><div class="spacer"></div>' +
           dersArr.map(function (d) {
             var pct = d.total ? Math.round(d.mature / d.total * 100) : 0;
-            return '<div class="ders-row"><span class="name">' + esc(d.name) + '</span>' +
+            return '<div class="ders-row"' + dh(d.name) + '><span class="name">' + esc(d.name) + '</span>' +
               '<span class="track"><i style="width:' + pct + '%"></i></span>' +
               '<span class="num">' + d.total + ' · %' + pct + '</span></div>';
           }).join('') + '</div>' : '');

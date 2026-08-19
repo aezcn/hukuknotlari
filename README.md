@@ -164,7 +164,9 @@ yapıştırarak deneyebilirsin.
 
 ## Günlük kullanım
 
-- **Bugün**: tekrarı gelen kartlar. Cevabı gör → *Tekrar / Zor / Normal / Kolay*.
+- **Bugün**: üstteki halka bugünün ilerlemesini gösterir — dolduğu oran yapılan
+  tekrarın toplam işe bölümü, ortasındaki sayı ise bekleyen kart adedi.
+  Kartta cevabı gör → *Tekrar / Zor / Normal / Kolay*.
   Butonların altındaki süre, o seçenekte kartın ne zaman geri geleceğini gösterir.
   Yanlış tuşa bastıysan **Geri al** — kart cevabı açık hâlde geri gelir, tekrar
   puanlarsın. Arka arkaya basarak birkaç kart geri gidebilirsin; seri sayacı da
@@ -177,6 +179,9 @@ yapıştırarak deneyebilirsin.
   altındaki örnek kartta görürsün. Sekme çubuğu ve etiketler sabit kalır —
   büyüyen şey okuduğun metin.
 - Ekranı iki parmakla açarak yakınlaştırabilirsin; uzun madde metinlerinde işe yarar.
+- Her ders kendi rengini alır: kartın üstündeki şerit, ders rozeti ve not
+  listesindeki sol çizgi hep aynı rengi taşır. Renk, ders ilk göründüğünde
+  atanır ve bir daha değişmez — yeni ders eklemek eskilerin rengini kaydırmaz.
 - Bir konuyu bir süre görmek istemiyorsan notu düzenleyip **Beklet** de.
 
 ### Serbest çalışma

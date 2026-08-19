@@ -14,6 +14,13 @@
   --radius: 14px;
   --tap: 44px;
   --read: 1;          /* okuma metinleri icin olcek — Ayarlar'dan degisir */
+
+  --accent-2: #2c5183;                /* degradenin acik ucu */
+  --sh-1: 0 1px 2px rgba(20,26,38,.05), 0 3px 10px rgba(20,26,38,.05);
+  --sh-2: 0 2px 6px rgba(20,26,38,.07), 0 16px 34px rgba(20,26,38,.11);
+  --ders-bg-s: 58%; --ders-bg-l: 94%;  /* ders rozeti: acik tema */
+  --ders-fg-s: 62%; --ders-fg-l: 30%;
+  --ders-bar-l: 55%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +37,13 @@
     --ok: #4cc38a;
     --warn: #e0a35e;
     --bad: #e57373;
+
+    --accent-2: #a3c4ea;
+    --sh-1: 0 1px 2px rgba(0,0,0,.30), 0 3px 10px rgba(0,0,0,.24);
+    --sh-2: 0 2px 8px rgba(0,0,0,.36), 0 18px 38px rgba(0,0,0,.44);
+    --ders-bg-s: 34%; --ders-bg-l: 22%;
+    --ders-fg-s: 68%; --ders-fg-l: 74%;
+    --ders-bar-l: 60%;
   }
 }
 
@@ -77,6 +91,7 @@ main { padding: 14px 16px 24px; max-width: 720px; margin: 0 auto; }
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 12px;
+  box-shadow: var(--sh-1);
 }
 
 button, .btn {
@@ -92,7 +107,12 @@ button, .btn {
   transition: transform .06s ease, opacity .15s ease;
 }
 button:active { transform: scale(0.98); }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary {
+  background: linear-gradient(180deg, var(--accent-2), var(--accent));
+  border-color: var(--accent);
+  color: #fff;
+  box-shadow: var(--sh-1);
+}
 @media (prefers-color-scheme: dark) { button.primary { color: #0f1520; } }
 button.ghost { background: transparent; }
 button.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, var(--line)); }
@@ -140,6 +160,11 @@ label.field > span { display: block; font-size: 12px; color: var(--muted); margi
 }
 .pill.accent { background: var(--accent-soft); color: var(--accent); }
 .pill.gold { background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold); }
+/* Her dersin kendi rengi var; ton JS'te ad'dan uretilip --dh olarak veriliyor. */
+.pill.ders {
+  background: hsl(var(--dh, 212) var(--ders-bg-s) var(--ders-bg-l));
+  color: hsl(var(--dh, 212) var(--ders-fg-s) var(--ders-fg-l));
+}
 
 /* ---------- alt sekmeler ---------- */
 nav.tabs {
@@ -168,11 +193,17 @@ nav.tabs button {
   align-items: center;
   gap: 3px;
 }
-nav.tabs button .ic { font-size: 19px; line-height: 1; }
+nav.tabs button { position: relative; }
+nav.tabs button .ic { line-height: 0; }
+nav.tabs button .ic svg {
+  width: 23px; height: 23px; display: block;
+  transition: transform .2s cubic-bezier(.3,1.4,.5,1);
+}
+nav.tabs button.on .ic svg { transform: translateY(-1px) scale(1.06); }
 nav.tabs button.on { color: var(--accent); }
 nav.tabs .dot {
   position: absolute;
-  transform: translate(14px, -6px);
+  top: 5px; left: calc(50% + 9px);
   width: 8px;
   height: 8px;
   border-radius: 999px;
@@ -180,7 +211,7 @@ nav.tabs .dot {
 }
 nav.tabs .badge {
   position: absolute;
-  transform: translate(16px, -4px);
+  top: 2px; left: calc(50% + 8px);
   background: var(--bad);
   color: #fff;
   font-size: 10px;
@@ -192,14 +223,25 @@ nav.tabs .badge {
 
 /* ---------- calisma ekrani ---------- */
 .study-card {
+  position: relative;
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 20px 18px;
-  min-height: 220px;
+  border-radius: 20px;
+  padding: 22px 18px 20px;
+  min-height: 190px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow: var(--sh-2);
+}
+/* Ustteki ince serit kartin dersinin rengini tasir. */
+.study-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg,
+    hsl(var(--dh, 212) 66% var(--ders-bar-l)),
+    hsl(var(--dh, 212) 66% var(--ders-bar-l) / 0));
 }
 .study-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .study-front {
@@ -247,12 +289,17 @@ nav.tabs .badge {
 .switch span { font-size: 14px; font-weight: 550; }
 
 .progress { height: 4px; background: var(--surface-2); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
-.progress > i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .25s ease; }
+.progress > i {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+  transition: width .3s cubic-bezier(.22,.9,.28,1);
+}
 
 /* ---------- liste ---------- */
 .note-item {
   background: var(--surface);
   border: 1px solid var(--line);
+  border-left: 3px solid hsl(var(--dh, 212) 55% var(--ders-bar-l));
   border-radius: 12px;
   padding: 11px 12px;
   margin-bottom: 8px;
@@ -265,6 +312,7 @@ nav.tabs .badge {
 
 .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 15px; }
 .empty .big { font-size: 38px; margin-bottom: 10px; }
+.empty .icon-empty { display: block; margin: 0 auto 12px; color: var(--accent); opacity: .85; }
 
 /* ---------- istatistik ---------- */
 .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
@@ -273,6 +321,7 @@ nav.tabs .badge {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px;
+  box-shadow: var(--sh-1);
 }
 .stat b { display: block; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
 .stat span { font-size: 12px; color: var(--muted); }
@@ -286,7 +335,10 @@ nav.tabs .badge {
 .ders-row:last-child { border-bottom: 0; }
 .ders-row .name { flex: 1; font-size: 14px; font-weight: 550; }
 .ders-row .track { width: 110px; height: 7px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-.ders-row .track > i { display: block; height: 100%; background: var(--gold); }
+.ders-row .track > i {
+  display: block; height: 100%;
+  background: hsl(var(--dh, 212) 60% var(--ders-bar-l));
+}
 .ders-row .num { font-size: 12px; color: var(--muted); width: 54px; text-align: right; }
 
 .leech-row {
@@ -332,7 +384,7 @@ details.more > summary::-webkit-details-marker { display: none; }
 details.more > summary::after { content: ' \203A'; }
 details.more[open] > summary::after { content: ' \2304'; }
 
-#quickBar button { margin-top: 9px; }
+#quickBar button { display: block; width: 100%; margin-top: 9px; }
 
 /* acik nottaki duzenle dugmesi */
 .note-item .note-act { display: none; margin-top: 10px; }
@@ -365,6 +417,48 @@ details.more[open] > summary::after { content: ' \2304'; }
   border-radius: 999px;
   font-size: 13px;
   font-weight: 650;
+}
+
+/* ---------- ilerleme halkasi ---------- */
+.ring-wrap {
+  position: relative;
+  width: 138px; height: 138px;
+  margin: 2px auto 16px;
+}
+.ring { display: block; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 9; stroke-linecap: round; }
+.ring .bg { stroke: var(--surface-2); }
+.ring .fg { animation: ringIn .9s cubic-bezier(.2,.85,.25,1) both; }
+@keyframes ringIn { from { stroke-dashoffset: var(--c); } }
+.ring-mid {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px;
+}
+.ring-mid b { font-size: 40px; font-weight: 700; letter-spacing: -.03em; line-height: 1; }
+.ring-mid span { font-size: 12px; color: var(--muted); }
+
+/* ---------- hareket ---------- */
+@keyframes cardIn {
+  from { opacity: 0; transform: translate3d(16px, 0, 0) scale(.99); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes viewIn {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.study-card.enter { animation: cardIn .28s cubic-bezier(.22,.9,.28,1) both; }
+.study-back { animation: riseIn .22s ease-out both; }
+.grades { animation: riseIn .26s ease-out both; }
+.view.active { animation: viewIn .22s ease-out both; }
+.icon-empty { animation: riseIn .3s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
 /* ---------- toast ---------- */
@@ -427,4 +521,4 @@ details.help pre {
 .notice.warn { border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
 .notice.ok { border-color: color-mix(in srgb, var(--ok) 40%, var(--line)); }
 .notice b { display: block; margin-bottom: 3px; }
-.notice > button { margin-top: 10px; }
+.notice > button { display: block; width: 100%; margin-top: 10px; }

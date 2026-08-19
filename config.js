@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Kurulum sonrasi doldurulacak iki deger. README.md'deki adimlari izle.
 // ---------------------------------------------------------------------------
-self.HN_VERSION = "1.0.10";
+self.HN_VERSION = "1.0.14";
 self.HN_CONFIG = {
   // Cloudflare Worker adresin. Ornek: "https://hukuk-push.aliemre.workers.dev"
   // Bos birakirsan uygulama calisir ama bildirim ozelligi kapali gorunur.
