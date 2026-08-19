@@ -3,7 +3,7 @@
 
 /* SURUM: index.html'deki ?v= degeri ile ayni olmali.
    Ikisini birden artirmak icin: tools/bump.sh */
-var VERSION = 'v17';
+var VERSION = 'v18';
 var ASSET_V = VERSION.slice(1);
 
 importScripts('config.js?v=' + ASSET_V, 'db.js?v=' + ASSET_V);

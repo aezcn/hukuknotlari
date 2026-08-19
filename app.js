@@ -256,7 +256,8 @@
     $$('.view').forEach(function (s) { s.classList.toggle('active', s.id === 'view-' + v); });
     $$('nav.tabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.view === v); });
     $('#viewTitle').textContent = TITLES[v] || '';
-    window.scrollTo(0, 0);
+    var m = document.querySelector('main');
+    if (m) m.scrollTop = 0;
     render();
   }
 

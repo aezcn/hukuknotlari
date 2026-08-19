@@ -58,14 +58,20 @@ html, body {
   overscroll-behavior-y: none;
 }
 
+/* Sayfanin tamami degil, yalnizca <main> kayiyor. Boylece ust baslik ve alt
+   sekme cubugu yerlerinden kimildayamaz: iOS'ta lastik-bant kaydirmasinda
+   sticky/fixed ogeler icerikle birlikte suruklenip cirkin duruyordu. */
+html { height: 100%; }
 body {
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ---------- basliklar ---------- */
 header.top {
-  position: sticky;
-  top: 0;
+  flex: 0 0 auto;
   z-index: 20;
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: saturate(180%) blur(12px);
@@ -80,7 +86,16 @@ header.top {
 header.top h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: -0.01em; flex: 1; }
 header.top .sub { font-size: 12px; color: var(--muted); font-weight: 400; }
 
-main { padding: 14px 16px 24px; max-width: 720px; margin: 0 auto; }
+main {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 14px 16px 24px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
 .view { display: none; }
 .view.active { display: block; }
 
@@ -131,6 +146,22 @@ input[type=text], input[type=search], input[type=time], select, textarea {
   -webkit-appearance: none;
   appearance: none;
 }
+
+/* appearance:none yerli oku siliyor; kendi okumuzu koymazsak select
+   duz bir metin kutusundan ayirt edilemiyor. */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' fill='none' stroke='%236b7280' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  background-size: 12px 8px;
+  padding-right: 36px !important;
+}
+@media (prefers-color-scheme: dark) {
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' fill='none' stroke='%239aa1ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
 /* 16px'in ALTINA inme: iOS, kucuk puntolu alana dokununca sayfayi kendiliginde
    yakinlastiriyor. Eskiden bunu viewport'taki maximum-scale=1 bastiriyordu ama
    o kural pinch-zoom'u da engelliyordu. */
@@ -168,8 +199,7 @@ label.field > span { display: block; font-size: 12px; color: var(--muted); margi
 
 /* ---------- alt sekmeler ---------- */
 nav.tabs {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
+  flex: 0 0 auto;
   z-index: 30;
   display: flex;
   background: color-mix(in srgb, var(--surface) 92%, transparent);
@@ -393,9 +423,7 @@ details.more[open] > summary::after { content: ' \2304'; }
 
 /* ---------- guncelleme seridi ---------- */
 #updateBar {
-  position: fixed;
-  left: 0; right: 0;
-  bottom: calc(56px + env(safe-area-inset-bottom));
+  flex: 0 0 auto;
   z-index: 40;
   display: flex;
   align-items: center;
@@ -465,7 +493,7 @@ details.more[open] > summary::after { content: ' \2304'; }
 #toast {
   position: fixed;
   left: 50%;
-  bottom: calc(76px + env(safe-area-inset-bottom));
+  bottom: calc(84px + env(safe-area-inset-bottom));
   transform: translateX(-50%) translateY(20px);
   background: var(--text);
   color: var(--bg);
