@@ -1357,7 +1357,28 @@
       DB.clearAll().then(function () { toast('Silindi'); return reload(); });
     });
 
-    $('#buildInfo').textContent = 'Hukuk Notları · sürüm ' + (self.HN_VERSION || '1.0');
+    $('#buildInfo').innerHTML = 'Hukuk Notları · sürüm ' + esc(self.HN_VERSION || '1.0') +
+      '<br><span style="opacity:.7">' + esc(layoutProbe()) + '</span>';
+  }
+
+  /* Gecici teshis: alt cubugun ekranin dibine oturup oturmadigini uzaktan
+     anlayabilmek icin cihazin gercek olculerini yaziyoruz. */
+  function layoutProbe() {
+    var probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;left:0;bottom:0;width:1px;' +
+      'height:env(safe-area-inset-bottom);pointer-events:none;visibility:hidden';
+    document.body.appendChild(probe);
+    var sab = probe.getBoundingClientRect().height;
+    probe.remove();
+
+    var nav = $('nav.tabs');
+    var navAlt = nav ? Math.round(nav.getBoundingClientRect().bottom) : 0;
+
+    return 'iç ' + window.innerHeight +
+      ' · ekran ' + (window.screen && window.screen.height) +
+      ' · güvenli ' + Math.round(sab) +
+      ' · çubuk ' + navAlt +
+      ' · tam ' + (navigator.standalone ? 'evet' : 'hayır');
   }
 
   /* Okuma metinlerinin olcegi. Cerceve (sekme, etiket) sabit kaliyor;
