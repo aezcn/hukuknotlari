@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-title" content="Hukuk Notları">
 <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f6f6f4" media="(prefers-color-scheme: light)">
-<link rel="stylesheet" href="app.css?v=23">
+<link rel="stylesheet" href="app.css?v=24">
 </head>
 <body>
 
@@ -186,6 +186,16 @@ Zamanaşımı süresi :: 10 yıl
     </div>
 
     <div class="card">
+      <b>Sınav tarihi</b>
+      <div class="tiny muted" style="margin:4px 0 8px">
+        Girersen Bugün ekranında geri sayım görünür. Boş bırakabilirsin.
+      </div>
+      <input type="date" id="examDate">
+      <div class="spacer"></div>
+      <button id="saveExam">Kaydet</button>
+    </div>
+
+    <div class="card">
       <b>Yazı boyutu</b>
       <div class="tiny muted" style="margin:4px 0 10px">
         Kart ve not metinleri için. Değişikliği hemen aşağıda görürsün.
@@ -347,10 +357,10 @@ Zamanaşımı süresi :: 10 yıl
   </div>
 </dialog>
 
-<script src="config.js?v=23"></script>
-<script src="db.js?v=23"></script>
-<script src="srs.js?v=23"></script>
-<script src="parse.js?v=23"></script>
-<script src="app.js?v=23"></script>
+<script src="config.js?v=24"></script>
+<script src="db.js?v=24"></script>
+<script src="srs.js?v=24"></script>
+<script src="parse.js?v=24"></script>
+<script src="app.js?v=24"></script>
 </body>
 </html>

@@ -134,7 +134,7 @@ button.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 4
 button:disabled { opacity: .45; cursor: default; }
 button.wide { width: 100%; }
 
-input[type=text], input[type=search], input[type=time], select, textarea {
+input[type=text], input[type=search], input[type=time], input[type=date], select, textarea {
   font: inherit;
   width: 100%;
   padding: 11px 12px;
@@ -452,6 +452,53 @@ details.more[open] > summary::after { content: ' \2304'; }
   font-size: 13px;
   font-weight: 650;
 }
+
+/* ---------- bugun ekrani ---------- */
+.hero {
+  background:
+    radial-gradient(120% 90% at 50% -10%,
+      color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%),
+    var(--surface);
+}
+.hero-line {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: -6px 0 14px;
+  line-height: 1.45;
+}
+.hero-line b { color: var(--text); font-weight: 650; }
+.hero.done .hero-line { margin-bottom: 12px; }
+
+/* seri + haftalik seride tutarlilik gorunsun */
+.streak-line { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+.streak-line > b {
+  font-size: 24px; font-weight: 700; letter-spacing: -.03em; line-height: 1;
+}
+.streak-line > span { font-size: 12.5px; color: var(--muted); }
+.streak-line .exam { margin-left: auto; align-self: center; }
+
+.week { display: flex; gap: 6px; }
+.week > div { flex: 1; text-align: center; }
+.week i {
+  display: block; height: 28px; border-radius: 9px;
+  background: var(--surface-2); margin-bottom: 5px;
+}
+.week i.on { background: linear-gradient(180deg, var(--accent-2), var(--accent)); }
+.week i.today { outline: 2px solid var(--accent); outline-offset: 2px; }
+.week span { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+.dist-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.dist-row:last-child { border-bottom: 0; }
+.dist-row .dot {
+  width: 10px; height: 10px; border-radius: 999px; flex: 0 0 10px;
+  background: hsl(var(--dh, 212) 60% var(--ders-bar-l));
+}
+.dist-row .name { flex: 1; font-size: 14px; font-weight: 550; }
+.dist-row .n { font-size: 13px; color: var(--muted); font-weight: 650; }
 
 /* ---------- ilerleme halkasi ---------- */
 .ring-wrap {

@@ -163,7 +163,11 @@
     }).then(function (b) {
       state.backup = computeBackup(b);
       return DB.getMeta('log', {}).then(function (log) {
-        state.todayCount = (log || {})[SRS.today()] || 0;
+        state.log = log || {};
+        state.todayCount = state.log[SRS.today()] || 0;
+        return DB.getMeta('examDate', '');
+      }).then(function (d) {
+        state.examDate = d || '';
       });
     }).then(function () {
       return DB.getMeta('dersColors', {});
@@ -265,7 +269,10 @@
     if (state.view === 'bugun') renderStudy();
     else if (state.view === 'notlar') renderList();
     else if (state.view === 'istatistik') renderStats();
-    else if (state.view === 'ayarlar') { renderPushStatus(); renderBackupStatus(); }
+    else if (state.view === 'ayarlar') {
+      renderPushStatus(); renderBackupStatus();
+      $('#examDate').value = state.examDate || '';
+    }
     else $('#viewSub').textContent = '';
   }
 
@@ -286,10 +293,102 @@
   }
 
   // =========================================================================
+  // Bugün ekrani parcalari
+  // =========================================================================
+
+  /* Bugun henuz calisilmadiysa seriyi dunden saymaya basla; yoksa sabahin
+     korunde "seri 0" yazip insanin moralini bozuyor. */
+  function streakCount() {
+    var log = state.log || {}, t = SRS.today(), n = 0, j = 0;
+    if (!log[t]) j = 1;
+    for (;; j++) {
+      if (log[SRS.addDays(t, -j)]) n++; else break;
+    }
+    return n;
+  }
+
+  function examLeft() {
+    if (!state.examDate) return '';
+    var gun = SRS.daysBetween(SRS.today(), state.examDate);
+    if (gun < 0) return '';
+    if (gun === 0) return 'Sınav bugün';
+    return 'Sınava ' + gun + ' gün';
+  }
+
+  var GUN_ADI = ['Pa', 'Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct'];
+
+  function momentumCard() {
+    var log = state.log || {}, t = SRS.today();
+    var seri = streakCount();
+    var bugunVar = !!log[t];
+
+    var gunler = '';
+    for (var i = 6; i >= 0; i--) {
+      var d = SRS.addDays(t, -i);
+      var pr = d.split('-');
+      var wd = new Date(Number(pr[0]), Number(pr[1]) - 1, Number(pr[2])).getDay();
+      var v = log[d] || 0;
+      gunler += '<div title="' + d + ': ' + v + '">' +
+        '<i class="' + (v ? 'on' : '') + (i === 0 ? ' today' : '') + '"></i>' +
+        '<span>' + GUN_ADI[wd] + '</span></div>';
+    }
+
+    var sinav = examLeft();
+    return '<div class="card">' +
+      '<div class="streak-line"><b>' + seri + '</b>' +
+        '<span>günlük seri' +
+        (seri && !bugunVar ? ' · sürdürmek için bugün çalış' : '') + '</span>' +
+        (sinav ? '<span class="pill gold exam">' + esc(sinav) + '</span>' : '') +
+      '</div>' +
+      '<div class="week">' + gunler + '</div>' +
+    '</div>';
+  }
+
+  function heroLine(due, yapilan) {
+    var t = SRS.today();
+    var late = due.filter(function (n) { return n.srs.due < t; }).length;
+    if (late) return late + ' tanesi gecikmiş — önce onlar gelecek.';
+    if (!yapilan) return 'Güne temiz başlıyorsun.';
+    return 'Bugün ' + yapilan + ' tekrar yaptın.';
+  }
+
+  /* Bugunun yukunu derslere gore boler; bir derse dokununca sadece o ders calisilir. */
+  function distCard(due) {
+    var by = {};
+    due.forEach(function (n) {
+      var d = n.ders || 'Genel';
+      by[d] = (by[d] || 0) + 1;
+    });
+    var arr = Object.keys(by).map(function (d) { return { ders: d, n: by[d] }; })
+      .sort(function (a, b) { return b.n - a.n; });
+    if (arr.length < 2) return '';
+
+    return '<div class="card"><b class="small">Bugünün dağılımı</b>' +
+      '<div class="tiny muted" style="margin:4px 0 6px">' +
+      'Bir derse dokunursan yalnızca onu çalışırsın.</div>' +
+      arr.map(function (x) {
+        return '<div class="dist-row" data-ders="' + esc(x.ders) + '"' + dh(x.ders) + '>' +
+          '<span class="dot"></span>' +
+          '<span class="name">' + esc(x.ders) + '</span>' +
+          '<span class="n">' + x.n + '</span></div>';
+      }).join('') + '</div>';
+  }
+
+  function bindDist() {
+    $$('#studyWrap .dist-row').forEach(function (el) {
+      el.addEventListener('click', function () { startSession(el.dataset.ders); });
+    });
+  }
+
+  // =========================================================================
   // Bugün / çalışma
   // =========================================================================
-  function startSession() {
+  function startSession(ders) {
     var due = dueList();
+    if (ders) {
+      due = due.filter(function (n) { return (n.ders || 'Genel') === ders; });
+      if (!due.length) return toast('Bu derste bekleyen kart yok');
+    }
     due.sort(function (a, b) {
       if (a.srs.due !== b.srs.due) return a.srs.due < b.srs.due ? -1 : 1;
       return Math.random() - 0.5;
@@ -298,7 +397,8 @@
       queue: due.slice(0, state.limit).map(function (n) { return n.id; }),
       done: 0,
       total: Math.min(due.length, state.limit),
-      revealed: false
+      revealed: false,
+      ders: ders || ''
     };
     renderStudy();
   }
@@ -318,28 +418,32 @@
         $('#goAdd').addEventListener('click', function () { go('ekle'); });
         return;
       }
+      var yapilan = state.todayCount || 0;
+
       if (!due.length) {
         var next = nextDueDate();
-        wrap.innerHTML = '<div class="empty">' + icon('bitti') + '' +
-          'Bugünlük tekrar bitti.<br><span class="small">' +
-          (next ? 'Sıradaki tekrar: ' + esc(prettyDate(next)) : 'Sırada bekleyen kart yok.') +
-          '</span></div>' +
-          '<button class="wide" id="aheadBtn">Yine de çalış (ileriden 20 kart)</button>' +
-          '<div class="spacer"></div>' + backupNudge() + drillCard();
+        wrap.innerHTML =
+          '<div class="card center hero done">' +
+            ring(1, yapilan, yapilan === 1 ? 'tekrar' : 'tekrar') +
+            '<div class="hero-line"><b>Bugünü bitirdin.</b>' +
+              (next ? '<br>Sıradaki tekrar: ' + esc(prettyDate(next)) : '') + '</div>' +
+            '<button class="wide" id="aheadBtn">Yine de çalış (ileriden 20 kart)</button>' +
+          '</div>' +
+          momentumCard() + backupNudge() + drillCard();
         $('#aheadBtn').addEventListener('click', studyAhead);
         bindDrillEntry();
         bindBackupNudge();
         return;
       }
-      var yapilan = state.todayCount || 0;
       wrap.innerHTML =
-        '<div class="card center">' +
+        '<div class="card center hero">' +
           ring(yapilan / (yapilan + due.length), due.length, 'kart bekliyor') +
-          (yapilan ? '<div class="tiny muted" style="margin:-8px 0 12px">' +
-            'bugün ' + yapilan + ' tekrar yaptın</div>' : '') +
+          '<div class="hero-line">' + esc(heroLine(due, yapilan)) + '</div>' +
           '<button class="primary wide" id="startBtn">Çalışmaya başla</button>' +
-        '</div>' + overdueNotice(due) + drillCard();
-      $('#startBtn').addEventListener('click', startSession);
+        '</div>' +
+        momentumCard() + distCard(due) + drillCard();
+      $('#startBtn').addEventListener('click', function () { startSession(); });
+      bindDist();
       bindDrillEntry();
       return;
     }
@@ -390,6 +494,10 @@
     $('#viewSub').textContent = s.done + ' / ' + (s.done + s.queue.length);
 
     var html =
+      (s.ders
+        ? '<div class="session-tag"><span class="pill ders"' + dh(s.ders) + '>' +
+          esc(s.ders) + '</span><span class="muted tiny">· sadece bu ders</span></div>'
+        : '') +
       (s.mode === 'serbest'
         ? '<div class="session-tag"><span class="pill gold">Serbest</span>' +
           '<span>' + esc(s.label || '') + '</span>' +
@@ -462,14 +570,6 @@
   function grade(g, label, note) {
     return '<button data-g="' + g + '">' + label +
       '<span class="when">' + esc(SRS.preview(note.srs, g)) + '</span></button>';
-  }
-
-  function overdueNotice(due) {
-    var t = SRS.today();
-    var late = due.filter(function (n) { return n.srs.due < t; }).length;
-    if (!late) return '';
-    return '<div class="notice warn"><b>' + late + ' kart gecikmiş</b>' +
-      'Bunlar önce gösterilecek.</div>';
   }
 
   function answer(note, rating) {
@@ -602,6 +702,7 @@
       return DB.getMeta('log', {}).then(function (log) {
         log = log || {};
         log[d] = (log[d] || 0) + 1;
+        state.log = log;
         state.todayCount = log[d];
         return DB.setMeta('log', log);
       });
@@ -618,6 +719,7 @@
           log[d]--;
           if (!log[d]) delete log[d];
         }
+        state.log = log;
         state.todayCount = log[d] || 0;
         return DB.setMeta('log', log);
       });
@@ -1336,6 +1438,15 @@
       if (!v || v < 1) return toast('Geçerli bir sayı gir');
       state.limit = v;
       DB.setMeta('limit', v).then(function () { toast('Kaydedildi'); });
+    });
+
+    $('#saveExam').addEventListener('click', function () {
+      var v = $('#examDate').value;
+      state.examDate = v;
+      DB.setMeta('examDate', v).then(function () {
+        toast(v ? 'Sınav tarihi kaydedildi' : 'Sınav tarihi kaldırıldı');
+        return reload();
+      });
     });
 
     segmented('#fontSize', function () {

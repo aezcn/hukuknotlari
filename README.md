@@ -165,7 +165,10 @@ yapıştırarak deneyebilirsin.
 ## Günlük kullanım
 
 - **Bugün**: üstteki halka bugünün ilerlemesini gösterir — dolduğu oran yapılan
-  tekrarın toplam işe bölümü, ortasındaki sayı ise bekleyen kart adedi.
+  tekrarın toplam işe bölümü, ortasındaki sayı ise bekleyen kart adedi. Altında
+  **günlük seri** ve son yedi günün şeridi durur; sınav tarihi girdiysen geri
+  sayım da orada görünür. **Bugünün dağılımı** kartında bir derse dokunursan
+  yalnızca o dersin bekleyen kartlarını çalışırsın.
   Kartta cevabı gör → *Tekrar / Zor / Normal / Kolay*.
   Butonların altındaki süre, o seçenekte kartın ne zaman geri geleceğini gösterir.
   Yanlış tuşa bastıysan **Geri al** — kart cevabı açık hâlde geri gelir, tekrar
@@ -175,6 +178,8 @@ yapıştırarak deneyebilirsin.
   düğmesiyle değiştirirsin.
 - **İstatistik**: seri, geçmiş çalışma, önümüzdeki günlerin yükü, ders bazlı ilerleme,
   takılan kartlar.
+- **Ayarlar → Sınav tarihi**: girersen Bugün ekranında "Sınava N gün" rozeti
+  çıkar. Boş bırakırsan hiç görünmez.
 - **Ayarlar → Yazı boyutu**: kart ve not metinleri için dört kademe. Seçtiğin an
   altındaki örnek kartta görürsün. Sekme çubuğu ve etiketler sabit kalır —
   büyüyen şey okuduğun metin.
