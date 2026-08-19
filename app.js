@@ -1508,7 +1508,10 @@
           '<button id="saveTimes" class="primary">Saatleri kaydet</button></div>' +
           '<div class="spacer"></div>' +
           '<div class="row"><button id="testPush" class="ghost">Test bildirimi</button>' +
-          '<button id="pushOff" class="danger">Kapat</button></div>';
+          '<button id="pushOff" class="danger">Kapat</button></div>' +
+          '<div class="spacer"></div>' +
+          '<button id="pushDiag" class="ghost small wide">Sunucudaki kaydı göster</button>' +
+          '<div id="pushDiagOut"></div>';
         drawTimes(times);
         $('#addTime').addEventListener('click', function () {
           var cur = readTimes(); cur.push('12:00'); drawTimes(cur);
@@ -1516,6 +1519,7 @@
         $('#saveTimes').addEventListener('click', function () { saveTimes(sub); });
         $('#testPush').addEventListener('click', function () { testPush(sub); });
         $('#pushOff').addEventListener('click', function () { disablePush(sub); });
+        $('#pushDiag').addEventListener('click', function () { showPushDiag(sub); });
       });
     }).catch(function (e) {
       el.innerHTML = '<div class="notice warn">Durum okunamadı: ' + esc(e.message) + '</div>';
@@ -1588,6 +1592,25 @@
       });
     }).then(function () { toast('Saatler kaydedildi'); })
       .catch(function (e) { toast('Kaydedilemedi: ' + e.message); });
+  }
+
+  /* Sunucunun bu cihaz icin ne kaydettigini geri okur. Zamanli bildirim
+     gelmedigi durumda sorunun nerede oldugunu ayirt etmeye yariyor. */
+  function showPushDiag(sub) {
+    var out = $('#pushDiagOut');
+    out.innerHTML = '<div class="tiny muted" style="margin-top:8px">Okunuyor…</div>';
+    postWorker('/status', { endpoint: sub.endpoint }).then(function (r) {
+      out.innerHTML = '<div class="notice" style="margin-top:8px">' +
+        '<b>Sunucudaki kayıt</b>' +
+        'saatler: ' + esc((r.saatler || []).join(', ') || '(yok)') + '<br>' +
+        'saat dilimi: ' + esc(r.saatDilimi || '(yok)') + '<br>' +
+        'sunucuya göre şu an: ' + esc(r.cihazSaati || '?') + '<br>' +
+        'son gönderim: ' + esc(r.sonGonderim || '(hiç)') +
+        '</div>';
+    }).catch(function (e) {
+      out.innerHTML = '<div class="notice warn" style="margin-top:8px">' +
+        '<b>Okunamadı</b>' + esc(e.message) + '</div>';
+    });
   }
 
   function testPush(sub) {

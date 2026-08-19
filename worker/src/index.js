@@ -28,7 +28,28 @@ export default {
 
     try {
       if (url.pathname === '/' || url.pathname === '/health') {
-        return json({ ok: true, service: 'hukuknotlari-push' }, 200, cors);
+        const lastCron = await env.SUBS.get('meta:lastCron');
+        const list = await env.SUBS.list({ prefix: 'sub:' });
+        const ist = localParts('Europe/Istanbul', new Date());
+        return json({
+          ok: true,
+          service: 'hukuknotlari-push',
+          utc: new Date().toISOString(),
+          istanbul: ist.date + ' ' + pad(Math.floor(ist.minutes / 60)) + ':' + pad(ist.minutes % 60),
+          abonelik: list.keys.length,
+          sonCron: lastCron || null,
+          cronKacDakikaOnce: lastCron
+            ? Math.round((Date.now() - Date.parse(lastCron)) / 60000) : null,
+          ayarlar: {
+            vapidAcikAnahtar: !!env.VAPID_PUBLIC_KEY,
+            vapidGizliAnahtar: !!env.VAPID_PRIVATE_JWK,
+            konu: !!env.VAPID_SUBJECT,
+            izinliKaynak: env.ALLOWED_ORIGIN || '(ayarlanmamis)'
+          }
+        }, 200, cors);
+      }
+      if (url.pathname === '/status' && request.method === 'POST') {
+        return await handleStatus(request, env, cors);
       }
       if (url.pathname === '/subscribe' && request.method === 'POST') {
         return await handleSubscribe(request, env, cors);
@@ -83,6 +104,24 @@ async function handleUnsubscribe(request, env, cors) {
   return json({ ok: true }, 200, cors);
 }
 
+/* Bir cihazin kayitli hatirlatma ayarini geri okur. Endpoint'i yalnizca
+   cihazin kendisi bildigi icin baskasinin kaydi goruntulenemiyor. */
+async function handleStatus(request, env, cors) {
+  const body = await request.json();
+  if (!body.endpoint) return json({ error: 'endpoint eksik' }, 400, cors);
+  const rec = await env.SUBS.get(await subKey(body.endpoint), 'json');
+  if (!rec) return json({ error: 'abonelik bulunamadi' }, 404, cors);
+  const local = localParts(rec.tz, new Date());
+  return json({
+    ok: true,
+    saatler: rec.times,
+    saatDilimi: rec.tz,
+    cihazSaati: pad(Math.floor(local.minutes / 60)) + ':' + pad(local.minutes % 60),
+    sonGonderim: rec.lastSent || '(hic)',
+    guncellendi: new Date(rec.updated).toISOString()
+  }, 200, cors);
+}
+
 async function handleTest(request, env, cors) {
   const body = await request.json();
   if (!body.endpoint) return json({ error: 'endpoint eksik' }, 400, cors);
@@ -100,6 +139,10 @@ async function handleTest(request, env, cors) {
 // ---------------------------------------------------------------------------
 
 async function runReminders(env, now) {
+  /* Cron'un gercekten calisip calismadigini disaridan gorebilmek icin nabiz.
+     'meta:' onekli oldugu icin asagidaki 'sub:' taramasina karismiyor. */
+  await env.SUBS.put('meta:lastCron', new Date(now).toISOString());
+
   let cursor;
   let sent = 0, checked = 0;
 
@@ -141,8 +184,10 @@ function dueTime(rec, now) {
     const m = /^(\d{1,2}):(\d{2})$/.exec(t);
     if (!m) continue;
     const target = Number(m[1]) * 60 + Number(m[2]);
-    const diff = local.minutes - target;
-    if (diff >= 0 && diff < WINDOW_MIN) {
+    /* Gece yarisini asan pencere: 23:55 hedefi 00:05'teki cron'da da yakalanmali. */
+    let diff = local.minutes - target;
+    if (diff < 0) diff += 1440;
+    if (diff < WINDOW_MIN) {
       return { date: local.date, time: pad(m[1]) + ':' + m[2] };
     }
   }
